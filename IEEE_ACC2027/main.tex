@@ -1,0 +1,57 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts % the class ignores \thanks in conference mode unless this is given
+\usepackage{amsmath,amssymb,amsthm,cite,graphicx}
+\usepackage{tikz}
+\usetikzlibrary{patterns,calc}
+\usepackage[caption=false,font=footnotesize,farskip=0pt,captionskip=3pt]{subfig}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+\usepackage{placeins}
+\graphicspath{{figures/}}
+\setcounter{topnumber}{4}\setcounter{totalnumber}{6}\setcounter{dbltopnumber}{4}
+\renewcommand{\topfraction}{0.95}\renewcommand{\dbltopfraction}{0.95}\renewcommand{\textfraction}{0.05}\renewcommand{\floatpagefraction}{0.5}\renewcommand{\dblfloatpagefraction}{0.5}
+% space between two figures and between a figure and the text (the class sets 0.85 and 1.55 baselines)
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\dblfloatsep}{6pt plus 2pt minus 2pt}\setlength{\dbltextfloatsep}{8pt plus 2pt minus 2pt}
+
+\input{macros}
+
+\begin{document}
+
+\title{Explicit Viability Bounds for Safety Filters with Configuration-Dependent Braking Authority}
+
+\author{%
+Hadi Hajieghrary$^{1}$ and Paul Schmitt$^{2}$%
+\thanks{$^{1}$Hadi Hajieghrary (e-mail: \texttt{hadi.hajieghrary@gatech.edu}).}%
+\thanks{$^{2}$Paul Schmitt (e-mail: \texttt{pauls@massrobotics.org},\hfil\break \texttt{paul.schmitt@reynolds-moore.com}).}%
+\thanks{The authors prepared this manuscript and present it solely in their individual capacities.}%
+}
+
+\maketitle
+
+\begin{abstract}
+A cable-suspended payload may approach a wall while every cable pulls it toward the wall. Although a high-order control barrier function (HOCBF) can admit an input now, the filter can lose feasibility before a quadrotor has time to swing behind the payload. We give a conditional, open-set certificate for this failure and a two-quadrotor example. A thrust-reserved maneuver yields a stopping-distance barrier whose safe set is controlled invariant for the continuous-time taut-cable model. An optimistic stopping distance bounds the viability kernel from outside. Both distances use the cable-direction-dependent support function of a tension zonotope. Simulations expose substantial conservatism when swinging is required, and wall contacts under a sampled filter and slack-cable model. These results distinguish the continuous-time certificate from its unverified sampled implementation.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Control barrier functions, controlled invariance, viability, cooperative aerial transport, cable-suspended payload, input constraints.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction}
+
+\input{sections/02_problem_formulation}
+
+\input{sections/03_hocbf_feasibility}
+
+\input{sections/04_authority_barrier}
+
+\input{sections/05_safety_filter}
+
+\input{sections/06_numerical_study}
+
+\input{sections/07_conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{References}
+
+\end{document}

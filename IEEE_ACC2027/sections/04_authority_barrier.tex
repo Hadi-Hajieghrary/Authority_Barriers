@@ -1,0 +1,155 @@
+\section{The Authority Barrier}\label{sec:theory}
+
+To obtain an authority that depends only on the cable directions, we fix in advance how each quadrotor divides its thrust between tension and swinging. Throughout, $\pos{z}:=\max\{0,z\}$ and $\negp{z}:=\max\{0,-z\}$.
+
+\begin{assumption}[Thrust reserve]\label{ass:split}
+There exist constants $\bar T_i\ge T_{\min}$ (tension limit) and $\rho_i\ge 0$ (swing reserve) with $\sum_j\bar T_j\le m_La_{\max}$ such that, for every $x\in\Xop$, every $T$ with $T_{\min}\le T_j\le\bar T_j$ for all $j$, and every $u_i^\perp\perp q_i$ with $\|u_i^\perp\|\le\rho_i$, the thrust vector $s_i(T)q_i+u_i^\perp$ lies in $\mathcal{F}_i$.
+\end{assumption}
+
+In words, each quadrotor can produce any tension up to $\bar T_i$ and, simultaneously, any perpendicular thrust up to $\rho_i$, and such tensions respect the cone in \eqref{eq:U}; by Lemma~\ref{lem:structure}(a), the assumption holds if $(\bar T_i+m_ia_{\max}+m_il_i\bar\omega^2)^2+\rho_i^2\le f_{\max,i}^2$.
+
+\begin{definition}[Directional authority]\label{def:authority}
+For a unit vector $y$ and $q\in(\Sph)^N$, let $\phi_i(z):=\bar T_i\pos{z}-T_{\min}\negp{z}$. The \emph{directional authority} of $q$ along $y$ is
+\begin{equation}
+\alpha_y(q):=\frac{1}{m_L}\sum_{i=1}^{N}\phi_i(q_i\tr y)-g\,e_3\tr y .
+\label{eq:authority}
+\end{equation}
+\end{definition}
+
+A cable that leans along $y$ contributes most at $\bar T_i$, a cable that leans against $y$ opposes least at $T_{\min}$, and the gravity term vanishes for the horizontal braking direction; each $\phi_i$ is nondecreasing, convex, and piecewise linear with one breakpoint.
+
+\begin{lemma}[Authority as a support function]\label{lem:support}
+Let $\mathcal{Z}(q):=\{\sum_iT_iq_i:\ T_{\min}\le T_i\le\bar T_i\}$. Then $\mathcal{Z}(q)$ is a zonotope, and $\alpha_y(q)=\frac{1}{m_L}\sigma_{\mathcal{Z}(q)}(y)-ge_3\tr y$, where $\sigma_{\mathcal{Z}}(y):=\max_{f\in\mathcal{Z}}y\tr f$ is its support function. Under Assumption~\ref{ass:split} and without disturbances, every value of $y\tr\ddot x_L$ in $[-\alpha_{-y}(q),\alpha_y(q)]$ is produced by some input in $\mathcal{U}(x)$ at every $x\in\Xop$, so $\alpha_y(q)\le\alpha^{\mathrm{ex}}_y(x)$.
+\end{lemma}
+\begin{proof}
+$\mathcal{Z}(q)$ is the Minkowski sum of the segments $[T_{\min},\bar T_i]\,q_i$, and the support function of a Minkowski sum is the sum of the support functions; for one segment, $\max_{T\in[T_{\min},\bar T_i]}T\,q_i\tr y=\phi_i(q_i\tr y)$. Realizability follows from Assumption~\ref{ass:split} with $u_i^\perp=0$, since $y\tr\ddot x_L=\frac{1}{m_L}\sum_iT_iq_i\tr y-ge_3\tr y$ is affine in $T$ on a box.
+\end{proof}
+
+\subsection{Systems with second-order authority}\label{sec:class}
+
+The construction uses two properties of the cable system, stated here for a general system with coordinates $\zeta_1,\dots,\zeta_N$: the braking authority is bounded above and below by nondecreasing functions of the coordinates, and each coordinate responds to the inputs only through its second derivative. For $\nu,\bar\zeta>0$, the \emph{admissible swing set}
+\begin{equation}
+\mathcal{V}(\nu,\bar\zeta):=\{(\zeta,\omega)\in\R^2:\ -\bar\zeta+\tfrac{\negp{\omega}^2}{2\nu}\le\zeta\le\bar\zeta-\tfrac{\pos{\omega}^2}{2\nu}\}
+\label{eq:box}
+\end{equation}
+is the convex set of $(\zeta,\dot\zeta)$ from which a double integrator with $|\ddot\zeta|\le\nu$ can keep $|\zeta|\le\bar\zeta$ for all future time.
+
+\begin{definition}[Second-order authority]\label{def:class}
+Consider a system with admissible inputs, a constraint function $h$ with $\dot h=-v$ and $\dot v=-b$, a closed operational set $\Xop$, and twice continuously differentiable coordinates $\zeta_1,\dots,\zeta_N$ of the state. The system has \emph{second-order authority} along $h$ on $\Xop$ with data $(\ua,\oa,\nu,\nu^{\mathrm{rel}},\bar\zeta)$ if:
+\begin{enumerate}
+\item[(C1)] $\ua$ is the sum of a constant and of $N$ continuous, nondecreasing, piecewise-linear functions of the individual $\zeta_i$; $\oa\ge\ua$ is continuous and nondecreasing in each $\zeta_i$; and $b\le\oa(\zeta)$ for every admissible input at every $x\in\Xop$.
+\item[(C2)] $|\zeta_i|\le\bar\zeta$ on $\Xop$, and $|\ddot\zeta_i|\le\nu^{\mathrm{rel}}$ for every admissible input at every $x\in\Xop$.
+\item[(C3)] There is a map that assigns to every $x\in\Xop$ with $(\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu,\bar\zeta)$ for all $i$, and to every choice of $\ddot\zeta^{\mathrm{d}}_i\in[-\nu,\nu]$, an admissible input that produces $b=\ua(\zeta)$ and $\ddot\zeta_i=\ddot\zeta^{\mathrm{d}}_i$ for all $i$, and whose solutions remain in $\Xop$ as long as $(\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu,\bar\zeta)$ for all $i$.
+\end{enumerate}
+\end{definition}
+
+In words, no admissible input brakes harder than $\oa$ or swings faster than $\nu^{\mathrm{rel}}$, while a reserved part of the input swings every coordinate at any rate up to $\nu$ and brakes with $\ua$ at the same time.
+
+\subsection{The braking maneuver and its stopping distance}\label{sec:barrier}
+
+For $(\zeta,\omega)\in\mathcal{V}(\nu,\bar\zeta)$, let $\tilde\zeta(t;\zeta,\omega)$ be the fastest motion of $\ddot\zeta\in[-\nu,\nu]$ from $(\zeta,\omega)$ to $(\bar\zeta,0)$, held at $\bar\zeta$ afterwards: with $r:=\sqrt{\omega^2/2+\nu(\bar\zeta-\zeta)}$, $t_1:=(r-\omega)/\nu\ge0$, and $t_2:=t_1+r/\nu$,
+\begin{equation}
+\tilde\zeta(t)=\begin{cases}
+\zeta+\omega t+\tfrac{\nu}{2}t^2, & 0\le t\le t_1,\\
+\bar\zeta-\tfrac{\nu}{2}(t_2-t)^2, & t_1\le t\le t_2,\\
+\bar\zeta, & t\ge t_2.
+\end{cases}
+\label{eq:profile}
+\end{equation}
+Let $x$ have $(\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu,\bar\zeta)$ for all $i$, and let every coordinate follow its swing $\tilde\zeta_i(t):=\tilde\zeta(t;\zeta_i,\dot\zeta_i)$. Along the maneuver, the braking deceleration is $\tilde\alpha(t;x):=\ua(\tilde\zeta_1(t),\dots,\tilde\zeta_N(t))$, the approach speed $\tilde v(t;x):=v-\int_0^t\tilde\alpha(s;x)\,ds$, and the distance traveled toward the wall $E(t;x):=\int_0^t\tilde v(s;x)\,ds$. The \emph{stopping distance} is
+\begin{equation}
+\Dres(x):=\max_{t\ge0}E(t;x),
+\label{eq:D}
+\end{equation}
+with maximizing times $T^\star(x)$; the maximum exists if $\ua_{\mathrm{sat}}:=\ua(\bar\zeta,\dots,\bar\zeta)>0$, and it is taken over all $t\ge0$, not up to the first zero of $\tilde v$, because a negative authority accelerates a payload at rest toward the wall. The \emph{authority barrier} is $H(x):=h-\Dres(x)$, and
+\begin{equation}
+\Xrf:=\{x\in\Xop:\ H(x)\ge0,\ (\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu,\bar\zeta)\ \forall i\}.
+\label{eq:Xrf}
+\end{equation}
+$H(x)$ is the smallest distance to the wall that the payload reaches during the maneuver started at $x$. Let $\plan(x)$ be the input that (C3) assigns to $x$ with $\ddot\zeta^{\mathrm{d}}_i=\ddot{\tilde\zeta}(0;\zeta_i,\dot\zeta_i)$; since the time-optimal swing is a feedback of $(\zeta_i,\dot\zeta_i)$, the closed loop under $\plan$ reproduces the swings, $b(t)=\tilde\alpha(t;x_0)$, and $v(t)=\tilde v(t;x_0)$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{profile_a_swings.png}\\[-2pt]
+\includegraphics[width=\columnwidth]{profile_b_authority.png}\\[-2pt]
+\includegraphics[width=\columnwidth]{profile_c_excursion.png}
+\caption{A reserved swing (top) changes the cable directions and increases available braking (middle). The barrier subtracts the maximum wallward excursion $\max_t E(t)$ from the current distance $h$ (bottom). Solid and dashed curves are two example states.}\label{fig:profile}
+\vspace{-5pt}
+\end{figure}
+
+\begin{lemma}[Envelope and monotonicity]\label{lem:envelope}
+(i) Every $\zeta(\cdot)$ with absolutely continuous derivative, $\zeta(0)=\zeta$, $\dot\zeta(0)=\omega$, $|\ddot\zeta|\le\nu$ a.e., and $\zeta\le\bar\zeta$ satisfies $\zeta(t)\le\tilde\zeta(t;\zeta,\omega)$ for all $t\ge0$. (ii) $\tilde\zeta(t;\zeta,\omega)$ is nondecreasing in $\zeta$ and $\omega$ on $\mathcal{V}(\nu,\bar\zeta)$. (iii) $\Dres$ is nondecreasing in $v$, nonincreasing in every $\zeta_i$ and $\dot\zeta_i$, and locally Lipschitz; along the maneuver started at $x_0$, $\Dres(x(t))=\max_{s\ge t}\int_0^s\tilde v(\cdot;x_0)-\int_0^t\tilde v(\cdot;x_0)$.
+\end{lemma}
+\begin{proof}[Proof scheme]
+Write $S(\zeta)=\sqrt{2\nu(\bar\zeta-\zeta)}$. A feasible trajectory moving toward $\bar\zeta$ must satisfy $\dot\zeta\le S(\zeta)$, or even full braking would overshoot. Before the switch $t_1$, $\tilde\zeta$ uses the largest acceleration $\nu$; afterwards it follows $\dot{\tilde\zeta}=S(\tilde\zeta)$ to $\bar\zeta$. A first crossing from below either contradicts maximal acceleration before $t_1$ or forces both motions to coincide on the stopping curve after $t_1$. This proves (i). Differentiation of the two polynomial branches in \eqref{eq:profile} gives nonnegative initial-state sensitivities on $\mathcal V$, proving (ii). Monotonicity of $\ua$ then orders $E(t)$ for every $t$, and maximization preserves that order. On compact initial-state sets the swing arrival times and the maximizing times are uniformly bounded because $\ua_{\rm sat}>0$; taking the maximum of the resulting locally Lipschitz family proves (iii). Restarting the swing at time $t$ reproduces its remaining trajectory, giving the stated time-shift identity.
+\end{proof}
+
+\subsection{Main result}\label{sec:main}
+
+At regular swing states, for fixed $t$, $E(t;x)$ is continuously differentiable in $(v,\zeta,\dot\zeta)$, because \eqref{eq:profile} is continuously differentiable in its initial data (one-sided at $(\bar\zeta,0)$) and the integration over $s$ smooths the breakpoints of $\ua$, which each $\tilde\zeta_i$ meets only at isolated times except while held at $\bar\zeta$. At these regular states, Danskin's theorem \cite{clarke1990optimization} gives the directional derivative
+\begin{equation}
+\Dres'(x;\delta)=\max_{t\in T^\star(x)}\nabla_xE(t;x)\tr\delta
+\label{eq:dirder}
+\end{equation}
+in directions $\delta$ along which the state stays in the domain of $\Dres$. At a degenerate swing state, use the upper right Dini derivative instead of the displayed gradient formula. For an admissible $u$, let $F_u(x)$ be the state derivative and define $H'(x;F_u(x))$ as this Dini derivative; at regular states it equals $-v-\Dres'(x;F_u(x))$, the ordinary derivative $\dot H(x,u)$ when the maximizing time is unique. On states with all $(\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu^{\mathrm{rel}},\bar\zeta)$, let $\Drel$ be \eqref{eq:D} computed with $(\oa,\nu^{\mathrm{rel}})$ in place of $(\ua,\nu)$, the stopping distance of an optimistic system that swings and brakes as hard as any admissible input allows, and let $\gamma$ be a locally Lipschitz extended class-$\mathcal{K}$ function.
+
+\begin{theorem}[Inner and outer bounds]\label{thm:sandwich}
+Let the system have second-order authority along $h$ on $\Xop$ with data $(\ua,\oa,\nu,\nu^{\mathrm{rel}},\bar\zeta)$, and let $\ua_{\mathrm{sat}}>0$. Then:
+\begin{enumerate}
+\item[(i)] $\Xrf$ is controlled invariant. For every $x\in\Xrf$, $K_H(x):=\{u\ \text{admissible}:\ H'(x;F_u(x))\ge-\gamma(H(x))\}$ contains $\plan(x)$. Every solution generated by a measurable selection $u(t)\in K_H(x(t))$ from $x(0)\in\Xrf$ that keeps $(\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu,\bar\zeta)$ satisfies $h(t)\ge H(x(t))\ge0$ for all $t\ge0$.
+\item[(ii)] $\Viab(\mathcal{C})\subseteq\{x\in\Xop:\ (\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu^{\mathrm{rel}},\bar\zeta)\ \forall i,\ h\ge\Drel(x)\}$.
+\item[(iii)] If $\ua\equiv\bar\alpha>0$, then $\Dres=\pos{v}^2/(2\bar\alpha)$ and $\Xrf$ is the classical safe set of a double integrator.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(i) Under $\plan$ from $x_0\in\Xrf$, Lemma~\ref{lem:envelope}(iii) and $h(t)=h_0-\int_0^tv$ give $H(x(t))=h_0-\max_{s\ge t}\int_0^s v$, nondecreasing in $t$; $\plan$ keeps the state in $\Xop$ and the swing states in $\mathcal{V}$, so $\Xrf$ is forward invariant under $\plan$, hence controlled invariant. Next, the swing restarted at a later state of the maneuver is the remaining part of the swing started at $x$, so the derivative of $E(t;\cdot)$ along $F_{\plan}(x)$ equals $\tilde v(t;x)-v$ at regular states, and by \eqref{eq:dirder}, $H'(x;F_{\plan}(x))=-\max_{t\in T^\star(x)}\tilde v(t;x)$. Every maximizing time $t>0$ is a stationary point of $E(\cdot;x)$, so $\tilde v(t;x)=0$, and $t=0$ maximizes only if $v\le0$; hence $H'(x;F_{\plan}(x))\ge0\ge-\gamma(H(x))$ at regular states. The preceding time-shift identity gives the same inequality for the Dini derivative along $\plan$ at degenerate states. Finally, along a solution generated by $K_H$ that keeps the swing states in $\mathcal{V}$, $\Dres$ is locally Lipschitz \cite{clarke1990optimization}, so $H(x(t))$ is continuous with derivative $H'(x;\dot x)\ge-\gamma(H)$ a.e., and the comparison argument for nonsmooth barriers \cite{glotfelter2017nonsmooth} gives $H\ge0$; $h\ge H$ since $\Dres\ge0$.
+
+(ii) Let $x_0\in\Viab(\mathcal{C})$ and let an admissible input keep the solution in $\mathcal{C}$. By (C2), $(\zeta_i,\dot\zeta_i)\in\mathcal{V}(\nu^{\mathrm{rel}},\bar\zeta)$ at all times, and by Lemma~\ref{lem:envelope}(i) with $\nu^{\mathrm{rel}}$, $\zeta_i(t)\le\tilde\zeta_i^{\mathrm{rel}}(t)$. By (C1) and the monotonicity of $\oa$, $b(t)\le\oa(\zeta(t))\le\oa(\tilde\zeta^{\mathrm{rel}}(t))=\tilde\alpha^{\mathrm{rel}}(t;x_0)$, so $v(t)\ge\tilde v^{\mathrm{rel}}(t;x_0)$ and $\min_th(t)\le h_0-\Drel(x_0)$; if $h_0<\Drel(x_0)$, the solution leaves $\mathcal{C}$.
+
+(iii) $\tilde\alpha\equiv\bar\alpha$ gives $\tilde v=v-\bar\alpha t$ and $\max_t\int_0^t\tilde v=\pos{v}^2/(2\bar\alpha)$.
+\end{proof}
+
+Together, (i) and (ii) give $\Xrf\subseteq\Viab(\mathcal{C})\subseteq\{h\ge\Drel\}$, which answers problems (a) and (b) with $\mathcal{S}=\Xrf$; Sec.~\ref{sec:filter} answers (c). The gap $\Dres-\Drel$ is what the division of the input costs and vanishes in case (iii). Part (i) is a backup-CBF guarantee \cite{gurriet2020scalable,chen2021backup} with $\plan$ as the backup controller, but the closest approach along the backup trajectory has the closed form \eqref{eq:D} instead of being simulated, and the same data yield the outer bound (ii). The sets $\Xrf$ and $\Cho$ need not be nested.
+
+\subsection{Application to the cable system}\label{sec:cable}
+
+\begin{assumption}[Swing reserve]\label{ass:nu}
+There exist $\nu,\nu_w>0$ and $\rho_i^{\mathrm{fb}}\ge0$ such that, for every $i$, $\sec\theta_q\sqrt{\bar\eta_{z,i}^2+\bar\eta_{w,i}^2}+\rho_i^{\mathrm{fb}}\le\rho_i$, where $\bar\eta_{z,i}:=m_i(l_i\nu+a_{\max}+l_i\bar\omega^2\bar z)$ and $\bar\eta_{w,i}:=m_i(l_i\nu_w+a_{\max}+l_i\bar\omega^2\bar w)$.
+\end{assumption}
+
+\begin{assumption}[Swing-rate consistency]\label{ass:op}
+$\bar\omega^2\ge\sec^2\theta_q\,(4\nu\bar z+4\nu_w\bar w)$.
+\end{assumption}
+
+Assumption~\ref{ass:nu} reserves, within $\rho_i$, the perpendicular thrust needed to impose any $\ddot z_i\in[-\nu,\nu]$ and $\ddot w_i\in[-\nu_w,\nu_w]$ against the coupling terms of Lemma~\ref{lem:structure}(b), the factor $\sec\theta_q$ accounting for the non-orthogonality of the two swing directions on the sphere, and keeps $\rho_i^{\mathrm{fb}}$ for feedback; Assumption~\ref{ass:op} makes the swing-rate bound of \eqref{eq:Xop} hold on the admissible swing sets.
+
+\begin{proposition}[The cable system has second-order authority]\label{prop:instance}
+Let Assumptions~\ref{ass:split}, \ref{ass:nu}, and \ref{ass:op} hold, let $d_L=d_i=0$, and let $\zeta_i:=z_i$. Then \eqref{eq:load}--\eqref{eq:veh} has second-order authority along $h$ on $\Xop$ with $\ua=\alpha_y$ of \eqref{eq:authority},
+\begin{align}
+\oa(z)=\min\Big\{\tfrac{1}{m_L}\textstyle\sum_i&\phi^{\mathrm{rel}}_i(z_i),\label{eq:oa}\\
+ &a_{\max}\sec\theta_q\,\max_i\pos{z_i}\Big\},\nonumber
+\end{align}
+where $\phi^{\mathrm{rel}}_i$ is $\phi_i$ with $\bar T_i^{\mathrm{rel}}:=f_{\max,i}+m_ia_{\max}+m_il_i\bar\omega^2$; $\nu$ of Assumption~\ref{ass:nu}; $\nu^{\mathrm{rel}}:=\max_i(\frac{f_{\max,i}}{m_il_i}+\frac{a_{\max}}{l_i}+\bar\omega^2)$; and $\bar\zeta=\bar z$. The map of (C3) sets $T_i=\bar T_i$ if $z_i>0$ and $T_i=T_{\min}$ otherwise, and steers each $w_i$ within $\mathcal{V}(\nu_w,\bar w)$.
+\end{proposition}
+\begin{proof}[Proof scheme]
+For (C1), $T_i\le f_{\max,i}+m_i a_{\max}+m_il_i\bar\omega^2$ follows from Lemma~\ref{lem:structure}(a). The tension cone also gives $\sum_iT_i\cos\theta_q\le m_La_{\max}$, which bounds $b$ by the second term of \eqref{eq:oa}. Projecting Lemma~\ref{lem:structure}(b) onto $y$ establishes (C2). For (C3), choose the tensions that realize $\ua$ and prescribe $\ddot z_i\in[-\nu,\nu]$ plus a transverse $\ddot w_i\in[-\nu_w,\nu_w]$ that keeps $w_i$ in its stopping set. The Gram matrix of $(P_iy,P_ir)$ has eigenvalues $1$ and $1-z_i^2-w_i^2\ge\cos^2\theta_q$, so the required perpendicular thrust has norm at most $\sec\theta_q\sqrt{\bar\eta_{z,i}^2+\bar\eta_{w,i}^2}\le\rho_i$. Assumption~\ref{ass:split} then realizes the tensions and swings simultaneously. Finally, $\|\dot q_i\|^2\le\sec^2\theta_q(\dot z_i^2+\dot w_i^2)\le\bar\omega^2$ on the product of the swing stopping sets, proving that the trajectory stays in $\Xop$.
+\end{proof}
+
+The second term of \eqref{eq:oa} comes from the cone of \eqref{eq:U}: since $\sum_iT_i\cos\theta_q\le e_3\tr\sum_iT_iq_i\le m_La_{\max}$, one has $b=\frac{1}{m_L}\sum_iT_iz_i\le a_{\max}\sec\theta_q\max_i\pos{z_i}$. With all cables at $\bar z$, $\Drel=\pos{v}^2/(2a_{\max}\bar z\sec\theta_q)$ against $\Dres=\pos{v}^2/(2\ua_{\mathrm{sat}})$ with $\ua_{\mathrm{sat}}=\frac{1}{m_L}\sum_i\bar T_i\bar z$; where the cables must first swing, the gap is set by $\nu$ against $\nu^{\mathrm{rel}}$.
+
+\begin{proposition}[Computation and decomposition]\label{prop:decomp}
+For $t_j\in T^\star(x)$, the time derivative of $h-E(t_j;\cdot)$ under $u$ is
+\begin{align}
+\dot H_j(x,u)=-v&+t_j\,b\label{eq:Hdot}\\
+&-\sum_{i}\big(\partial_{z_i}E(t_j;x)\,\dot z_i+\partial_{\dot z_i}E(t_j;x)\,\ddot z_i\big),\nonumber
+\end{align}
+with $b=\frac{1}{m_L}\sum_iT_iz_i$ and $\ddot z_i=\frac{1}{m_il_i}y\tr u_i^\perp-\frac{1}{l_i}y\tr P_ia-\|\dot q_i\|^2z_i$, and $H'(x;F_u(x))=\min_j\dot H_j(x,u)$ at regular states. Moreover: (a) $\Dres$, $T^\star$, and the coefficients of \eqref{eq:Hdot} depend on the state only through $(v,\{z_i,\dot z_i\}_i)$ and are computed exactly in $O(N\log N)$ arithmetic operations, because $E(\cdot;x)$ is piecewise quartic with at most $4N$ breakpoints; forming all gradient rows additionally takes $O(N|T^\star|)$ time; (b) given a common value $\hat a$ of the specific force, each constraint $\dot H_j\ge-\gamma(H)$ splits into $N$ affine constraints, one per quadrotor on $(T_i,u_i^\perp)$, whose right-hand sides sum to $-\gamma(H)+v$ once the consistency equation $m_L\hat a=\sum_iT_iq_i$ is also enforced; (c) without a common $\hat a$, the local constraints are neither necessary nor sufficient.
+\end{proposition}
+\begin{proof}[Proof scheme]
+At a regular state, $\partial_vE(t;x)=t$ and the chain rule gives \eqref{eq:Hdot}; Danskin's formula makes the derivative of $H=h-\max_tE(t)$ the minimum over its active times. Every $\tilde z_i$ is piecewise quadratic, with at most its switch, arrival, and two zero crossings as breakpoints. Thus $\tilde\alpha$ is piecewise quadratic, $E$ piecewise quartic, and candidate maximizers are interval endpoints or roots of cubic $\tilde v$. Sorting $O(N)$ events takes $O(N\log N)$ arithmetic operations; all active gradient rows additionally take $O(N|T^\star|)$. For a committed common $\hat a$, \eqref{eq:Hdot} is a sum of local affine terms, but validity also requires $m_L\hat a=\sum_iT_iq_i$; otherwise the local rows need not represent the actual coupled plant.
+\end{proof}
+
+\begin{remark}[Scope of the guarantee]\label{rem:inner}
+The certificate assumes an exact taut-cable model, continuously updated thrust commands, and a feasible transverse swing reserve. Wind, mass errors, actuator tracking, slack cables, and zero-order-hold inputs require additional error bounds and are \emph{not} covered by Theorem~\ref{thm:sandwich}. In particular, continuity and local Lipschitzness of $\Dres$ do not by themselves give a numerical sampled-data margin.
+\end{remark}
+

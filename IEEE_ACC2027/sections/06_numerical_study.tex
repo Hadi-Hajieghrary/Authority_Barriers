@@ -1,0 +1,80 @@
+% The figures of this section are declared ahead of its text, in the order of their numbers.
+\begin{figure*}
+\centering
+\includegraphics[width=0.24\textwidth]{sequence_0.png}\hfill
+\includegraphics[width=0.24\textwidth]{sequence_1.png}\hfill
+\includegraphics[width=0.24\textwidth]{sequence_2.png}\hfill
+\includegraphics[width=0.24\textwidth]{sequence_3.png}
+\caption{Four frames of a collocation trajectory for the mixed cable configuration at $v_0=4\,\mathrm{m/s}$ from $h_0=0.56\Dres$. The vehicles reposition their cables behind the payload and enter the certified set. The frames show one example of a safe trajectory; the kernel was not computed exhaustively.}\label{fig:sequence}
+\vspace{-5pt}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.90\columnwidth]{e1_margin.png}
+\caption{HOCBF feasibility margin in a perfect-actuator trial. The feasible-to-infeasible transition occurs before a cable can enter the braking half-space.}\label{fig:e1}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\columnwidth]{sampled_margin_map.png}
+\caption{Sampled-filter runs in the $(v_0,H(x_0))$ plane (filled: wall contact; open: no contact). The step gives the largest observed contact margin in each speed bin. The observed threshold is not a certified sampled-data bound.}\label{fig:sampled}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.98\columnwidth]{trial_a_distances.png}
+\caption{Wall distance $h$ (solid), predicted stopping distance $\Dres$ (dashed), and optimistic stopping distance $\Drel$ (dotted) in a perfect-actuator trial under an adversarial nominal command. The trial illustrates the continuous-time maneuver but does not prove sampled safety.}\label{fig:trial-distances}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.90\columnwidth,trim=0 25.4 0 0,clip]{trial_b_swing.png}
+\caption{Cable swing coordinates $z_i$ of the four vehicles in the trial of Fig.~\ref{fig:trial-distances}.}\label{fig:trial-swing}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.90\columnwidth]{trial_c_phase.png}
+\caption{Swing states $(z_i,\dot z_i)$ in the trial of Fig.~\ref{fig:trial-distances} (circle: start; square: end); the shaded region is the admissible swing set $\mathcal V$.}\label{fig:trial-phase}
+\vspace{-5pt}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.90\columnwidth]{sandwich_a.png}
+\caption{Viability band for configuration A, cables initially leaning toward the wall: reserved (dashed) and optimistic (dotted) stopping distances. Dots are the smallest \emph{found and re-simulated} collocation trajectories; they do not prove where the kernel boundary lies. Colored curves are two closed-loop trajectories of the sampled filter.}\label{fig:sandwich-a}
+\vspace{-5pt}
+\end{figure}
+
+\begin{figure}
+\centering
+\subfloat[Configuration B]{\includegraphics[width=0.49\columnwidth]{sandwich_b.png}\label{fig:sandwich-b}}\hfill
+\subfloat[Configuration C]{\includegraphics[width=0.49\columnwidth]{sandwich_c.png}\label{fig:sandwich-c}}
+\caption{Viability bands for (a) mixed cable directions and (b) cables already behind the payload; curves and dots as in Fig.~\ref{fig:sandwich-a}.}\label{fig:sandwich-bc}
+\vspace{-5pt}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\columnwidth]{thrust_budget.png}
+\caption{Thrust budget of one vehicle: the reserved rectangle lies in the available thrust ball.}\label{fig:thrust}
+\vspace{-5pt}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\columnwidth]{nu_sensitivity.png}
+\caption{Sensitivity of the reserved stopping distance to a hypothetical swing acceleration $\nu$ for configuration A at $v_0=3\,\mathrm{m/s}$. The shaded interval respects the stated rate-consistency assumption; points to its right are diagnostic calculations, not certified operating points.}\label{fig:nu}
+\vspace{-5pt}
+\end{figure}
+
+\section{Numerical study}\label{sec:sim}
+Figures~\ref{fig:profile} and \ref{fig:trial-distances}--\ref{fig:trial-phase} illustrate the predicted and realized swing profiles. The full-order simulation has four $1.5\,\mathrm{kg}$ vehicles carrying a $1\,\mathrm{kg}$ point payload on $1\,\mathrm m$ cables. It uses $T_{\min}=1\,\mathrm N$, $f_{\max}=44\,\mathrm N$, $\bar T_i=3.2\,\mathrm N$, $\rho_i=34\,\mathrm N$, $a_{\max}=13\,\mathrm{m/s^2}$, $\bar z=0.239$, $\bar w=0.171$, $\bar\omega=1\,\mathrm{s^{-1}}$, and $\nu=\nu_w=0.5\,\mathrm{s^{-2}}$. Figure~\ref{fig:thrust} shows the thrust split. The thrust-reserve bound is arithmetically consistent: $\sqrt{(\bar T_i+m_ia_{\max}+m_il_i\bar\omega^2)^2+\rho_i^2}=41.73\,\mathrm N<(f_{\max}\mathrm = 44 N)$. Its spring--damper cables can go slack; the filter runs at $200\,\mathrm{Hz}$.
+
+All 690 HOCBF trials over the tested gain pairs and actuator modes lost QP feasibility before a cable entered the braking half-space (Fig.~\ref{fig:e1}); this does not establish initial feasibility for arbitrary gains. Of 100 trials started close to $H=0$ under an adversarial nominal input, the sampled authority filter reached the wall in 59 despite a feasible QP at its sampling instants (Fig.~\ref{fig:sampled}). In 56 trials the spring--damper cables temporarily lost the positive-tension condition. Thus the continuous-time invariant-set theorem does not certify these runs. The largest barrier loss was $0.85\,\mathrm m$ within one $5\,\mathrm{ms}$ hold; no contact was observed above an initial margin of $0.78\,\mathrm m$ in the tested 100-state sweep. This margin is empirical and holds for the tested distribution only. A $1\,\mathrm{kHz}$ attitude loop also incurred $17$--$43\,\mathrm N$ tracking errors during command jumps.
+
+Direct-collocation searches covered three initial cable configurations at eight speeds, with each candidate subsequently simulated. When cables already lean away from the wall, the observed feasible distance is about $0.97$--$0.98$ times $\Dres$; when a swing is required, feasible trajectories can begin at only $0.25$--$0.55\,\Dres$ (Figs.~\ref{fig:sandwich-a} and~\ref{fig:sandwich-bc}). Figure~\ref{fig:sequence} shows one of the found trajectories. The large gap when cables lean toward the wall is driven in part by the reserved swing acceleration: $\nu=0.5\,\mathrm{s^{-2}}$ needs about $1.8\,\mathrm{s}$ to cross the allowed angle range, while the physical thrust in the simulations can reach the swing-rate limit much sooner. Figure~\ref{fig:nu} varies a hypothetical $\nu$ to show this sensitivity; values beyond the shaded admissible region cannot be substituted into the theorem without changing its assumptions. A collocation success gives an example trajectory but a failure does not locate the viability boundary. The numerical evidence therefore supports the qualitative gap between the reserved and relaxed models, while it cannot validate either set inclusion or a universal percentage gap.
+
+Evaluating $\Dres$ takes $0.5$--$0.6\,\mathrm{ms}$ and the filter $2$--$4.5\,\mathrm{ms}$, close to the $5\,\mathrm{ms}$ sampling period; solver failures, model mismatch, and inter-sample excursions preclude a real-time guarantee. A certified zero-order-hold error bound and an explicit rate constraint are needed before claims of sampled safety are made.
+

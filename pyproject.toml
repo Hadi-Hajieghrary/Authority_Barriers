@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "authority-barriers"
+version = "0.1.0"
+description = "Authority Barriers: theory library, full-order Drake simulator, viability kernels and experiments of the paper"
+requires-python = ">=3.10"
+dependencies = ["numpy>=2.0", "scipy>=1.13", "pyyaml", "matplotlib", "torch"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+crosscheck = ["jax[cpu]", "hj-reachability"]   # C-7 cross-check of the level-set solver (authority_barriers.viability.crosscheck_hj)
+viz = ["playwright", "pillow"]                   # Meshcat renders of the simulation for the trial figures (authority_barriers.simulator.viz; needs `playwright install chromium`)
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["authority_barriers*"]
+
+[tool.setuptools.package-data]
+authority_barriers = ["configs/*.yaml", "configs/derived/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["slow: long-running checks (kernel on a small 4-D grid)"]

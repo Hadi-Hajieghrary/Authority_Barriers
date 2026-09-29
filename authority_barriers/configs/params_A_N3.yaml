@@ -1,0 +1,21 @@
+# Set A_N3 (D-9): the N = 3 team of the Drake replication subset of E1 and of the 3-D collocation;
+# every per-cable constant of set A, payload mass scaled with N (m_L = 0.75 kg), identical to
+# authority_barriers.experiments.bench_library.with_N(load_set("A"), 3).
+name: A_N3
+N: 3
+m_L: 0.75
+m: 1.5
+l: 1.0
+T_min: 1.0
+theta_q_deg: 20.0
+z_bar_frac: 0.7
+w_bar_frac: 0.5
+nu: 0.5
+nu_w: 0.5
+a_max: 12.0
+rho_fb: 1.0
+margin: 0.05
+hover_margin: 1.2
+kappa_H: 1.0
+d_bar_L: 0.1
+d_bar_i: 0.3

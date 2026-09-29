@@ -1,0 +1,53 @@
+\section{Problem Formulation}\label{sec:problem}
+
+Quadrotor $i\in\{1,\dots,N\}$ has position $p_i\in\R^3$, mass $m_i$, and thrust vector $u_i:=f_iR_ie_3$, where $f_i\ge0$ is the thrust magnitude, $R_i\in SO(3)$ the attitude, and $e_3$ the vertical unit vector; an attitude controller produces the commanded thrust vectors (Remark~\ref{rem:inner}). Each thrust vector lies in the ball $\mathcal{F}_i:=\{u\in\R^3:\ \|u\|\le f_{\max,i}\}$; a tilt limit can be added to $\mathcal{F}_i$ as long as Assumption~\ref{ass:split} is checked with it.
+
+The payload is a point mass $m_L$ at $x_L\in\R^3$, attached to quadrotor $i$ by a massless, inextensible cable of length $l_i$ with unit direction $q_i\in\Sph$ from the payload to the quadrotor, $p_i=x_L+l_iq_i$. The cable exerts the force $T_iq_i$ on the payload and $-T_iq_i$ on the quadrotor, with $T_i\ge0$ because a cable cannot push. With disturbance forces $d_L$, $d_i$ and the gravitational acceleration $g$,
+\begin{align}
+m_L\ddot x_L &= \textstyle\sum_{i} T_i q_i - m_L g e_3 + d_L, \label{eq:load}\\
+m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i + d_i. \label{eq:veh}
+\end{align}
+The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$. In this work, we assume that every cable is taut, with a tension of at least $T_{\min}>0$; the filter of Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
+
+We decompose each thrust vector along the cable and perpendicular to it, $u_i=s_iq_i+u_i^{\perp}$ with $s_i:=q_i\tr u_i$, $u_i^\perp:=P_iu_i$, $P_i:=I-q_iq_i\tr$, and we use the \emph{specific force} of the payload, $a:=\ddot x_L+ge_3$, which an accelerometer on the payload measures. Differentiating $\|p_i-x_L\|=l_i$ twice and substituting \eqref{eq:load}--\eqref{eq:veh} gives the following.
+
+\begin{lemma}[Structure]\label{lem:structure}
+Along any solution of \eqref{eq:load}--\eqref{eq:veh} with taut cables:
+(a) $T_i = s_i - m_i\,q_i\tr a + m_i l_i\|\dot q_i\|^2 + q_i\tr d_i$, so the tension depends on the inputs only through the parallel components $s=(s_1,\dots,s_N)$;
+(b) $\ddot q_i = \tfrac{1}{m_il_i}u_i^\perp - \tfrac{1}{l_i}P_i a - \|\dot q_i\|^2 q_i + \tfrac{1}{m_il_i}P_id_i$, so the cable direction depends on the inputs only through $u_i^\perp$ and $a$;
+(c) $M_a(q)\,a=\sum_i s_iq_i+\sum_i m_il_i\|\dot q_i\|^2q_i+\sum_i (q_i\tr d_i)q_i+d_L$ with $M_a(q):=m_LI+\sum_i m_iq_iq_i\tr\succeq m_LI$, so $a$ is affine in $s$;
+(d) for a given $a$, (a) and (b) involve only the quantities of quadrotor $i$.
+\end{lemma}
+\begin{proof}[Proof scheme]
+Differentiate $p_i=x_L+l_iq_i$ twice. Since $q_i^\top\dot q_i=0$ and $q_i^\top\ddot q_i=-\|\dot q_i\|^2$, projecting the vehicle equation along $q_i$ isolates $T_i$ and gives (a). Projecting perpendicular to $q_i$ removes the tension and gives (b). Substituting (a) into the payload equation gives (c). For any nonzero $r$, $r^\top M_a r=m_L\|r\|^2+\sum_i m_i(q_i^\top r)^2>0$, so $a$ is uniquely determined by the parallel thrusts. The remaining local dependences in (d) follow directly.
+\end{proof}
+
+In words, the parallel component sets the tension, the perpendicular component swings the cable, the two share the limit $\|s_iq_i+u_i^\perp\|\le f_{\max,i}$, and the quadrotors interact only through the payload's specific force. For fixed $(q,\dot q)$, (a) and (c) define an affine bijection between $s$ and $T=(T_1,\dots,T_N)$, so we use the tensions as decision variables: given $T$, $a=\frac{1}{m_L}(\sum_jT_jq_j+d_L)$, and (a) returns $s_i(T)$.
+
+\subsection{Wall constraint, safe set, and admissible inputs}
+
+We consider a wall with horizontal unit normal $n$ pointing into it, with the constraint
+\begin{equation}
+h(x_L):=d_0-n\tr x_L\ge 0,
+\label{eq:h}
+\end{equation}
+where $h$ is the distance from the payload to the wall. We write $v:=n\tr\dot x_L$ for the approach speed, $y:=-n$ for the braking direction, and $b:=y\tr\ddot x_L$ for the braking deceleration, so that $\dot h=-v$ and $\dot v=-b$, and we describe each cable direction by $z_i:=q_i\tr y$ and $w_i:=q_i\tr r$, $r:=e_3\times y$. A cable with $z_i>0$ leans away from the wall and pulls the payload away from it; one with $z_i<0$ pulls it toward the wall.
+
+We impose the operational constraints
+\begin{equation}
+\Xop:=\{x:\ |z_i|\le\bar z,\ (w_i,\dot w_i)\in\mathcal V(\nu_w,\bar w),\ \|\dot q_i\|\le\bar\omega\ \forall i\},
+\label{eq:Xop}
+\end{equation}
+with $\bar z^2+\bar w^2\le\sin^2\theta_q$, $\theta_q<\pi/2$, which keep every cable within $\theta_q$ of the vertical, reserve stopping room for the transverse swing, and bound its swing rate; $\mathcal V$ is defined in \eqref{eq:box} below. The safe set is $\mathcal{C}:=\{x:\ h\ge 0\}\cap\Xop$. The inputs must respect the thrust limits, the tension bound, and a bound $a_{\max}$ on the payload's specific force:
+\begin{equation}
+\begin{split}
+\mathcal{U}(x):=\{u:\ &u_i\in\mathcal{F}_i,\ T_i(x,u)\ge T_{\min}\ \forall i,\\ &\textstyle\|\sum_iT_i(x,u)q_i\|\le m_La_{\max}\}.
+\end{split}
+\label{eq:U}
+\end{equation}
+The last constraint is a design limit on the payload's acceleration; the bound that follows from the thrust limits alone, $\frac{1}{m_L}\sum_j(f_{\max,j}+m_jl_j\bar\omega^2)$, is too large for Assumption~\ref{ass:split} to hold with realistic constants.
+
+Tensions affect $\ddot h$ directly, whereas a transverse input first changes $\ddot q_i$ and thereby later changes the feasible braking force.
+
+A state is \emph{viable} if some input signal with values in $\mathcal{U}(x)$ keeps the trajectory in $\mathcal{C}$ forever; the set of viable states is the \emph{viability kernel} $\Viab(\mathcal{C})$ \cite{aubin1991viability}, outside of which no controller can keep the system safe. A set is \emph{controlled invariant} if some admissible input signal keeps every trajectory that starts in it inside it; every controlled-invariant subset of $\mathcal{C}$ lies in $\Viab(\mathcal{C})$, which has no closed form. The problem is: (a) find a controlled-invariant set $\mathcal{S}\subseteq\mathcal{C}$ whose membership can be tested online; (b) find an explicit set that contains $\Viab(\mathcal{C})$; and (c) derive a safety filter that is feasible at every state of $\mathcal{S}$.
+

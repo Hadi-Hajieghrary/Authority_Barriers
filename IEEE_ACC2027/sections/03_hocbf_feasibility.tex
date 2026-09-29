@@ -1,0 +1,36 @@
+\section{Loss of Feasibility of High-Order CBF Filters}\label{sec:negative}
+
+For a unit vector $y$, the \emph{exact directional authority} at $x$,
+\begin{equation}
+\alpha^{\mathrm{ex}}_y(x):=\max\{\,y\tr\ddot x_L(x,u):\ u\in\mathcal{U}(x)\,\},
+\label{eq:exact}
+\end{equation}
+is the largest acceleration that admissible inputs can give the payload along $y$; the maximum exists because $\ddot x_L$ is affine in $u$ and $\mathcal{U}(x)$ is compact and convex ($-\infty$ if empty). Since it is attained, for any function $\beta$ of the state,
+\begin{equation}
+\{u\in\mathcal{U}(x):\ b(x,u)\ge\beta(x)\}\ne\emptyset\iff\alpha^{\mathrm{ex}}_y(x)\ge\beta(x).
+\label{eq:iff}
+\end{equation}
+
+Since $h$ has relative degree two with respect to the tensions, HOCBFs \cite{xiao2019control,nguyen2016exponential} apply the barrier condition twice. Let $\alpha_1$ be a continuously differentiable class-$\mathcal{K}$ function, $\alpha_2$ an extended class-$\mathcal{K}$ function, and $\psi_1:=\dot h+\alpha_1(h)=-v+\alpha_1(h)$. With $\dot v=-b$, the HOCBF condition $\dot\psi_1\ge-\alpha_2(\psi_1)$ reads
+\begin{equation}
+b\ \ge\ \beta(x):=\alpha_1'(h)\,v-\alpha_2(\psi_1).
+\label{eq:hocbf}
+\end{equation}
+The HOCBF filter minimizes the change to the nominal command over $K_{\mathrm{HO}}(x):=\{u\in\mathcal{U}(x):\ b(x,u)\ge\beta(x)\}$ and, while $K_{\mathrm{HO}}\ne\emptyset$, keeps the state in $\Cho:=\{h\ge 0,\ \psi_1\ge 0\}$ \cite{xiao2022high}. By \eqref{eq:iff}, $K_{\mathrm{HO}}(x)\ne\emptyset$ if and only if the \emph{feasibility margin} $\mu(x):=\alpha^{\mathrm{ex}}_{y}(x)-\beta(x)$ is nonnegative.
+
+\begin{definition}[No-braking set]\label{def:free}
+The no-braking set for the braking direction $y$ is $\Sigma_y:=\{q\in(\Sph)^N:\ q_i\tr y\le 0,\ i=1,\dots,N\}$.
+\end{definition}
+
+In $\Sigma_y$ no cable leans away from the wall, so no admissible input can decelerate the payload; the set has nonempty interior and contains the configurations of a team accelerating toward the wall.
+
+\begin{theorem}[Conditional loss of HOCBF feasibility]\label{thm:negative}
+Assume zero disturbances and a feasible interior state $x_0\in\Cho\cap\Xop$ with $q_i^\top y<0$, $0<v_0<\alpha_1(h_0)$, and $\mu(x_0)>0$. Let
+$\tau=\min_i(-z_i(0))/\bar\omega$ and $t_\psi=[h_0-\alpha_1^{-1}(v_0)]/v_0$. If $t_\psi<\tau$, then every admissible trajectory that remains in $\Xop$ has a nonempty interval before $\tau$ with $h>0$, $q\in\Sigma_y$, and $K_{\mathrm{HO}}=\varnothing$. The property persists on an open neighborhood of $x_0$ if the input set varies continuously and stays nonempty there.
+\end{theorem}
+\begin{proof}
+Until $\tau$, $z_i(t)\le z_i(0)+\bar\omega t\le0$. Because $T_i\ge T_{\min}$, $b=m_L^{-1}\sum_iT_iz_i\le0$, hence $v(t)\ge v_0$ and $h(t)\le h_0-v_0t$. The first time $h$ reaches $\alpha_1^{-1}(v_0)>0$ occurs by $t_\psi<\tau$. Immediately afterwards $\psi_1<0$ while $h>0$. Since $\alpha_1'(h)\ge0$ and $\alpha_2$ is extended class-$\mathcal K$, $\mu=\alpha_y^{\rm ex}-\alpha_1'(h)v+\alpha_2(\psi_1)<0$. The inequalities are strict at the initial state and the authority maximum is continuous under the stated regularity, so they persist locally.
+\end{proof}
+
+The initial-feasibility hypothesis cannot be removed. For example, as $\psi_1\downarrow0$ with $\alpha_1(h)=kh$ and $\alpha_2(s)=\epsilon s$, the required braking tends to $kv>0$, whereas the available braking in $\Sigma_y$ is nonpositive; such initial states already have an infeasible QP. Thus a universal claim for \emph{every} choice of HOCBF gains would be too strong. For $k_1=1$, $k_2=20\,\mathrm{s}^{-1}$, $h_0=1\,\mathrm m$, $v_0=0.85\,\mathrm{m/s}$, and two $30^\circ$ cables, the floor tensions give $b=-1\,\mathrm{m/s^2}$, the HOCBF threshold is $-2.15\,\mathrm{m/s^2}$, $t_\psi=0.176\,\mathrm s$, and $\tau=0.25\,\mathrm s$ when $\bar\omega=2\,\mathrm{rad/s}$; provided those tensions satisfy the thrust constraints, this is an initially feasible instance.
+

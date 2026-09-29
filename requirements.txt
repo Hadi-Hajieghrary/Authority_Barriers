@@ -1,0 +1,16 @@
+# Versions of the environment in which the checks of docs/reproduction.md were run (Python 3.10.12, Ubuntu 22.04.5 LTS).
+# The technical report states the same versions of drake, numpy, scipy, torch, jax, hj_reachability and playwright
+# for the recorded runs. pyproject.toml states the dependencies of the package; this file pins them:
+#     pip install -r requirements.txt && pip install -e . --no-deps
+
+drake==1.51.1    # simulator, solvers (Clarabel, SNOPT), collocation, Meshcat
+numpy==2.2.6
+scipy==1.15.3
+torch==2.14.0    # level-set solvers (CPU)
+matplotlib==3.10.9    # figures
+pyyaml==6.0.3    # parameter sets
+pytest==9.1.1    # extra [test]
+playwright==1.63.0    # extra [viz]; also `playwright install chromium`
+pillow==12.3.0    # extra [viz]
+jax==0.6.2    # extra [crosscheck]
+hj_reachability==0.7.0    # extra [crosscheck]
