@@ -1,6 +1,11 @@
-\documentclass[conference]{IEEEtran}
-\IEEEoverridecommandlockouts % the class ignores \thanks in conference mode unless this is given
-\usepackage{amsmath,amssymb,amsthm,cite,graphicx}
+\documentclass[letterpaper,10pt,conference]{ieeeconf}
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
+\let\proof\relax
+\let\endproof\relax
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{graphicx,booktabs,array,cite}
+\usepackage[hidelinks]{hyperref}
 \usepackage{tikz}
 \usetikzlibrary{patterns,calc}
 \usepackage[caption=false,font=footnotesize,farskip=0pt,captionskip=3pt]{subfig}
@@ -32,10 +37,6 @@ Hadi Hajieghrary$^{1}$ and Paul Schmitt$^{2}$%
 \begin{abstract}
 A cable-suspended payload may approach a wall while every cable pulls it toward the wall. Although a high-order control barrier function (HOCBF) can admit an input now, the filter can lose feasibility before a quadrotor has time to swing behind the payload. We give a conditional, open-set certificate for this failure and a two-quadrotor example. A thrust-reserved maneuver yields a stopping-distance barrier whose safe set is controlled invariant for the continuous-time taut-cable model. An optimistic stopping distance bounds the viability kernel from outside. Both distances use the cable-direction-dependent support function of a tension zonotope. Simulations expose substantial conservatism when swinging is required, and wall contacts under a sampled filter and slack-cable model. These results distinguish the continuous-time certificate from its unverified sampled implementation.
 \end{abstract}
-
-\begin{IEEEkeywords}
-Control barrier functions, controlled invariance, viability, cooperative aerial transport, cable-suspended payload, input constraints.
-\end{IEEEkeywords}
 
 \input{sections/01_introduction}
 
