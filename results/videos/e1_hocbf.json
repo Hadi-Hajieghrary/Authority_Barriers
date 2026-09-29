@@ -1,0 +1,80 @@
+{
+ "video": "e1_hocbf.mp4",
+ "title": "HOCBF filter: every cable leans toward the wall",
+ "setup": "HOCBF on the wall distance, gains (0.5, 10) \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "High-order control barrier function on the wall distance with the gains (k1, k2) = (0.5, 10). At the start every cable leans toward the wall, so no tension can brake the payload. The program of the filter is infeasible from t = 15 ms on, and the payload reaches the wall at 3.9 m/s.",
+ "source": "core/e1_perfect/e1_k0p5_10_0",
+ "window_s": [
+  0.0,
+  1.965
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 331,
+ "duration_s": 11.033333333333333,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 18.283112789452773,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.1490610921285074
+ },
+ "facts": {
+  "h0": 7.892892548755266,
+  "v0": 3.6541206158108146,
+  "H0": 0.9431578532586524,
+  "D0": 6.9497346954966135,
+  "min_h_window": 0.0320161796237572,
+  "min_h": 0.0320161796237572,
+  "min_h_mm": 32.016179623757196,
+  "T_trial": 1.965,
+  "t_end": 1.965,
+  "v_end": 3.8631381095058095,
+  "contact": true,
+  "n_ticks": 394,
+  "ratio": 1.135711346487775,
+  "n_inf": 391,
+  "t_inf": 0.015,
+  "t_inf_ms": 15.0,
+  "feas": "the program of the filter is infeasible at 391 of 394 samples"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

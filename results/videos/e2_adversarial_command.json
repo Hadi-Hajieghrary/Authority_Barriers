@@ -1,0 +1,80 @@
+{
+ "video": "e2_adversarial_command.mp4",
+ "title": "Authority-barrier filter against full thrust toward the wall",
+ "setup": "authority-barrier filter, adversarial nominal command \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "The nominal command is full thrust toward the wall. From the margin H(x0) = 0.77 m at 3.4 m/s the filter swings the cables behind the payload and brakes; the payload stops 0.06 m from the wall, and in the 15 s of the trial its closest approach is 0.0008 m. Among the trials of this set that stay off the wall it is the one that comes closest.",
+ "source": "core/e2_perfect_max_off0_layer1/e2_perfect_max_off0_layer1_75",
+ "window_s": [
+  0.0,
+  3.23
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 483,
+ "duration_s": 16.1,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 35.26263163219362,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.1690205353463342
+ },
+ "facts": {
+  "h0": 5.195888553403112,
+  "v0": 3.3871478617017075,
+  "H0": 0.7701785147184639,
+  "D0": 4.425710038684648,
+  "min_h_window": 0.059405643565923885,
+  "min_h": 0.0007515972651005556,
+  "min_h_mm": 0.7515972651005556,
+  "T_trial": 14.995000000000001,
+  "t_end": 3.23,
+  "v_end": 0.022839305777769395,
+  "contact": false,
+  "n_ticks": 647,
+  "ratio": 1.1740237177732877,
+  "n_inf": 0,
+  "t_inf": NaN,
+  "t_inf_ms": NaN,
+  "feas": "the program of the filter is feasible at every sample"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

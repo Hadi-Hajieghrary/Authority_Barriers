@@ -1,0 +1,80 @@
+{
+ "video": "e2_sampled_contact.mp4",
+ "title": "Sampled filter started at the boundary of the safe set",
+ "setup": "authority-barrier filter at 200 Hz, adversarial nominal command \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "Initial state at the boundary of the safe set, H(x0) = 0.14 m. The barrier decreases between two samples of the 200 Hz filter, which the continuous-time condition does not see, and the payload reaches the wall at 0.48 m/s; the program of the filter is feasible at every sample.",
+ "source": "core/e2_perfect_max_off0/e2_perfect_max_off0_72",
+ "window_s": [
+  0.0,
+  3.64
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 532,
+ "duration_s": 17.733333333333334,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 43.79995093597163,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.1390743143121814
+ },
+ "facts": {
+  "h0": 6.553493020494592,
+  "v0": 3.3704725109046336,
+  "H0": 0.13576406742279623,
+  "D0": 6.417728953071796,
+  "min_h_window": 0.002423532653709196,
+  "min_h": 0.002423532653709196,
+  "min_h_mm": 2.423532653709196,
+  "T_trial": 3.64,
+  "t_end": 3.64,
+  "v_end": 0.47578515156963247,
+  "contact": true,
+  "n_ticks": 729,
+  "ratio": 1.0211545343244535,
+  "n_inf": 0,
+  "t_inf": NaN,
+  "t_inf_ms": NaN,
+  "feas": "the program of the filter is feasible at every sample"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

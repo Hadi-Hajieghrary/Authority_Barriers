@@ -1,0 +1,81 @@
+{
+ "video": "e2_attitude_loop.mp4",
+ "title": "Authority-barrier filter with the attitude loop",
+ "setup": "authority-barrier filter, adversarial nominal command \u00b7 geometric attitude controller at 1 kHz \u00b7 N = 4",
+ "description": "A geometric attitude controller at 1 kHz tracks the commanded thrust vectors. Its tracking error reaches 43 N at the jumps of the command, the program of the filter is infeasible at 175 of 392 samples, and the payload reaches the wall at 0.02 m/s.",
+ "source": "core/e2_attitude_max_off0/e2_attitude_max_off0_69",
+ "window_s": [
+  0.0,
+  1.955
+ ],
+ "speed": 0.2,
+ "frames_per_second": 30,
+ "frames": 389,
+ "duration_s": 12.966666666666667,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 11.192151566189251,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.12917920558801008
+ },
+ "facts": {
+  "h0": 0.5699248750634339,
+  "v0": 1.0978083574025415,
+  "H0": 0.025474725106744756,
+  "D0": 0.5444501499566892,
+  "min_h_window": 0.0001045516648107282,
+  "min_h": 0.0001045516648107282,
+  "min_h_mm": 0.10455166481072821,
+  "T_trial": 1.955,
+  "t_end": 1.955,
+  "v_end": 0.018508419125548667,
+  "contact": true,
+  "n_ticks": 392,
+  "ratio": 1.0467898210860467,
+  "n_inf": 175,
+  "t_inf": 0.9450000000000001,
+  "t_inf_ms": 945.0000000000001,
+  "feas": "the program of the filter is infeasible at 175 of 392 samples",
+  "att_err": 42.625696365359495
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

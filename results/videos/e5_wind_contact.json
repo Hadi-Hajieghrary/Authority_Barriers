@@ -1,0 +1,80 @@
+{
+ "video": "e5_wind_contact.mp4",
+ "title": "Robust filter under wind: contact",
+ "setup": "authority-barrier filter with the disturbance budget, wind at the budget \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "The setting of the video e5_wind from another initial state, 14.82 m at 3.9 m/s: the robust barrier is lost between two samples and the payload reaches the wall at 3.44 m/s.",
+ "source": "core/e5_scale1_layer1/e5_s1_28",
+ "window_s": [
+  0.0,
+  2.9
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 443,
+ "duration_s": 14.766666666666667,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 30.947797755125077,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.15045231547451512
+ },
+ "facts": {
+  "h0": 14.816713744253239,
+  "v0": 3.8822652821885617,
+  "H0": 0.9345924569964037,
+  "D0": 13.882121287256835,
+  "min_h_window": 0.03001706716890782,
+  "min_h": 0.03001706716890782,
+  "min_h_mm": 30.01706716890782,
+  "T_trial": 2.9,
+  "t_end": 2.9,
+  "v_end": 3.442085818340803,
+  "contact": true,
+  "n_ticks": 581,
+  "ratio": 1.0673234614261955,
+  "n_inf": 0,
+  "t_inf": NaN,
+  "t_inf_ms": NaN,
+  "feas": "the program of the filter is feasible at every sample"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

@@ -1,0 +1,81 @@
+{
+ "video": "e7_reduced_thrust.mp4",
+ "title": "Thrust limit reduced to 20 N",
+ "setup": "authority-barrier filter, adversarial nominal command \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "With a thrust limit of 20 N in place of 44 N the thrust reserve that the barrier assumes does not exist: the program of the filter is infeasible at 109 of 639 samples and the payload reaches the wall at 0.19 m/s. Of the 10 recorded trials, 1 ends at the wall, which is the one shown.",
+ "source": "optional/e7_stress/e7_fmax20_3",
+ "window_s": [
+  0.0,
+  3.19
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 478,
+ "duration_s": 15.933333333333334,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 8.660686998495926,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.06430979726914555
+ },
+ "facts": {
+  "h0": 6.394050120379945,
+  "v0": 3.8392721496558533,
+  "H0": 0.8808756241320559,
+  "D0": 5.513174496247889,
+  "min_h_window": 0.0015316510792822342,
+  "min_h": 0.0015316510792822342,
+  "min_h_mm": 1.5316510792822342,
+  "T_trial": 3.19,
+  "t_end": 3.19,
+  "v_end": 0.187787660888141,
+  "contact": true,
+  "n_ticks": 639,
+  "ratio": 1.1597764817223823,
+  "n_inf": 109,
+  "t_inf": 1.32,
+  "t_inf_ms": 1320.0,
+  "feas": "the program of the filter is infeasible at 109 of 639 samples",
+  "share": "Of the 10 recorded trials, 1 ends at the wall"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 20.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

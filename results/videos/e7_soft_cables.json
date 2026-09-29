@@ -1,0 +1,82 @@
+{
+ "video": "e7_soft_cables.mp4",
+ "title": "Cables ten times softer",
+ "setup": "authority-barrier filter, adversarial nominal command \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "Cable stiffness divided by ten. A cable is slack at 61 samples of the trial, which is outside the taut-cable model. The payload stops 0.06 m from the wall; in the 10 s of the trial its closest approach is 0.015 m. Of the 20 recorded trials, none ends at the wall; the video shows the one with the most samples with a slack cable.",
+ "source": "optional/e7_stress/e7_soft_5",
+ "window_s": [
+  0.0,
+  3.42
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 506,
+ "duration_s": 16.866666666666667,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 38.822666038862856,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.1422333582732202
+ },
+ "facts": {
+  "h0": 5.979143695237647,
+  "v0": 3.404647503825451,
+  "H0": 0.9639002970975765,
+  "D0": 5.01524339814007,
+  "min_h_window": 0.05953073531871492,
+  "min_h": 0.014981595650220773,
+  "min_h_mm": 14.981595650220774,
+  "T_trial": 9.995000000000001,
+  "t_end": 3.42,
+  "v_end": 0.023684496331872213,
+  "contact": false,
+  "n_ticks": 685,
+  "ratio": 1.1921941211178393,
+  "n_inf": 0,
+  "t_inf": NaN,
+  "t_inf_ms": NaN,
+  "feas": "the program of the filter is feasible at every sample",
+  "slack": 61,
+  "share": "Of the 20 recorded trials, none ends at the wall"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}

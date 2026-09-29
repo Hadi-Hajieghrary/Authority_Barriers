@@ -1,0 +1,78 @@
+{
+ "video": "e3_collocation.mp4",
+ "title": "Optimized trajectory with three vehicles",
+ "setup": "direct collocation, no filter \u00b7 taut-cable model \u00b7 N = 3",
+ "description": "Direct collocation with three vehicles, every cable leaning toward the wall at 4.0 m/s. The trajectory starts at h = 3.94 m, 0.52 of the stopping distance D = 7.65 m of the swing-and-brake maneuver, and ends after 0.81 s on the boundary of the safe set (H = 0.000 m). From there the video continues with the braking maneuver on the taut-cable model, which stops the payload at the wall, 0.1 mm in front of it.",
+ "source": "core/e3_collocation_jobs/A_v4_k41_s6_dt0.01-0.1_reg.json",
+ "window_s": [
+  0.0,
+  1.7100058433275036
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 301,
+ "duration_s": 10.033333333333333,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 8.012930806168958,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.19081168564504927
+ },
+ "facts": {
+  "h0": 3.9447907904271693,
+  "v0": 4.0,
+  "H0": -3.7057125607043107,
+  "D0": 7.65050335113148,
+  "min_h_window": 5.46809125616805e-05,
+  "min_h": 5.46809125616805e-05,
+  "min_h_mm": 0.054680912561680506,
+  "T_trial": 2.4408847124884403,
+  "t_end": 1.7100058433275036,
+  "v_end": -0.22881233712833982,
+  "contact": false,
+  "n_ticks": 344,
+  "ratio": 0.515625,
+  "t_phase": 0.8050058433275036,
+  "H_phase": 0.00010001313044405435
+ },
+ "set": "A_N3",
+ "N": 3,
+ "m_L": 0.75,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.064500484197992,
+ "git": "2c818f4"
+}

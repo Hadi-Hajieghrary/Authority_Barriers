@@ -1,0 +1,81 @@
+{
+ "video": "e7_heavier_payload.mp4",
+ "title": "Payload 20 % heavier than the model",
+ "setup": "authority-barrier filter, adversarial nominal command \u00b7 thrust vectors applied directly \u00b7 N = 4",
+ "description": "The payload weighs 1.2 kg, the filter is designed for 1 kg. The payload reaches the wall at 0.70 m/s. Of the 20 recorded trials, all end at the wall; the video shows the first of them.",
+ "source": "optional/e7_stress/e7_mass1.2_A_0",
+ "window_s": [
+  0.0,
+  2.585
+ ],
+ "speed": 0.25,
+ "frames_per_second": 30,
+ "frames": 406,
+ "duration_s": 13.533333333333333,
+ "size": [
+  1920,
+  1080
+ ],
+ "cameras": {
+  "projection": "parallel",
+  "azimuth_deg": 15.0,
+  "elevation_deg": 18.0,
+  "close_up_width_m": 4.4,
+  "payload_at": [
+   0.32,
+   0.3
+  ],
+  "overview_width_m": 22.74709152010055,
+  "reference_wall_normal": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "smallest_margin_of_the_team_in_the_close_up": 0.15525142496893443
+ },
+ "facts": {
+  "h0": 7.913182599390517,
+  "v0": 3.3167514727933574,
+  "H0": 1.0593425210604357,
+  "D0": 6.853840078330081,
+  "min_h_window": 0.004469126019108623,
+  "min_h": 0.004469126019108623,
+  "min_h_mm": 4.469126019108623,
+  "T_trial": 2.585,
+  "t_end": 2.585,
+  "v_end": 0.7048744484940314,
+  "contact": true,
+  "n_ticks": 518,
+  "ratio": 1.1545618965358966,
+  "n_inf": 0,
+  "t_inf": NaN,
+  "t_inf_ms": NaN,
+  "feas": "the program of the filter is feasible at every sample",
+  "share": "Of the 20 recorded trials, all end at the wall"
+ },
+ "set": "A",
+ "N": 4,
+ "m_L": 1.0,
+ "m_i": 1.5,
+ "l_i": 1.0,
+ "T_min": 1.0,
+ "T_bar_i": 3.2,
+ "rho_i": 34.0,
+ "rho_fb": 1.0,
+ "nu": 0.5,
+ "nu_w": 0.5,
+ "a_max": 13.0,
+ "theta_q_deg": 20.0,
+ "z_bar": 0.2394141003279681,
+ "w_bar": 0.17101007166283436,
+ "omega_bar": 1.0,
+ "f_max_i": 44.0,
+ "theta_max": "pi (ball)",
+ "gamma": "1.0 H",
+ "filter_dt": 0.005,
+ "attitude_dt": 0.001,
+ "solver": "Clarabel",
+ "integrator": "radau3, accuracy 1e-6, max step 1e-3",
+ "alpha_sat": 3.0645004841979917,
+ "git": "2c818f4"
+}
