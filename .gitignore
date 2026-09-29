@@ -55,3 +55,10 @@ IEEE_ACC2027/*.synctex.gz
 IEEE_ACC2027/*.bbl
 IEEE_ACC2027/*.blg
 
+Ref
+tests
+docs
+results/*
+!results/videos/
+
+

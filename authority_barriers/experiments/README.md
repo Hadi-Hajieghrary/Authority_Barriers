@@ -1,4 +1,4 @@
-# `authority_barriers/experiments/` — the experiments of Sec. VI and their figures
+# `authority_barriers/experiments/` — the experiments of Sec. VI, their figures and videos
 
 One module per experiment. Each driver samples the initial states its question needs, runs the trials
 through `authority_barriers.simulator.harness` (in parallel, with a per-trial cache so that an interrupted run resumes),
@@ -91,6 +91,43 @@ Rules for every figure: one plot per file; a JSON sidecar with the constants the
 requires with every figure (integrator, step, solver, γ = κ_H H, ρ_i, T̄_i, ν, the set, N, f_max, …) and a
 caption that states the expected and the refuting observation.
 
+## Videos
+`trial_videos.py` replays sixteen recorded scenarios in slow motion, one video each (1920 x 1080, H.264, 30 frames per
+second): the HOCBF filter and the authority-barrier filter from the same initial state (E1); the adversarial nominal
+command with the closest call, a contact by the sampled-data mechanism and a contact with the attitude loop (E2); a
+direct-collocation trajectory for N = 3, continued by the braking maneuver from its end state (E3); the robust filter
+under wind without and with a contact (E5); the distributed filter with a delayed broadcast (E6); the corridor, one
+Monte Carlo trial with and without a filter, and four stress cases: thrust limit 20 N, payload of 1.2 kg, soft cables,
+swing rates above the limit (E7). `scenarios()` states the rule by which each record is chosen.
+
+A frame has four parts.
+- *Close-up*: the team from beside the payload, turned 15° behind it and raised by 18°, in parallel projection, by a
+  camera that moves with the payload. Vertical lines stay vertical and the wall normal lies along the horizontal axis
+  of the picture, so the lean of a cable is seen undistorted. Thin lines from the payload mark the vertical and the
+  leans ±z̄ of the operational cone: a cable to the right of the vertical leans toward the wall and cannot brake, a
+  cable to its left is behind the payload. A grid of 1 m behind the team and the panel of the wall show the motion of
+  the payload; the panel begins at the lateral position of the payload and extends toward the camera, so its edge in
+  the picture is the point that the payload approaches. For the corridor the camera looks along the corridor, from
+  behind the team and above, over a floor grid.
+- *Overview*: the whole maneuver and the wall from the same direction, fixed camera.
+- *Plots*: h with D, and the leans z_i, with a cursor at the instant shown and a strip where the program of the filter
+  is infeasible.
+- *Readouts*: t, h, v, D, H, the state of the filter, the number of cables behind the payload, the legend, and the
+  cable directions seen from above (one dot per vehicle at (z_i, w_i) inside the box of the operational set).
+
+The frame of the close-up is widened when the team of a record needs more room, and the rendering stops with an error
+if the payload, a vehicle or the tip of a thrust arrow leaves the picture. States between two samples of a record are
+interpolated (linearly at the 5 ms of the trial logs, cubically in the positions between the knots of the collocation
+trajectory). A command above the thrust limit is drawn at the limit, which is what the plant applies. The quadrotors
+are drawn at 0.75 of a 0.3 m airframe; the model treats them as points.
+
+`--gif` converts the videos of the folder to `<name>.gif` (960 x 540, 10 frames per second, 128 colors), which the main
+README shows. The folder `results/videos/` is part of the repository; the rest of `results/` is not.
+
+Output `results/videos/<name>.mp4`, one frame as `<name>.png`, the sidecar `<name>.json` (record, window, cameras,
+constants, the numbers quoted in the description) and `README.md` (how to read a video, one entry per video). Needs
+the `[viz]` extra and `ffmpeg`.
+
 ## Running
 ```
 python -m authority_barriers.experiments.e1_thm5 --actuator perfect --workers 8
@@ -102,6 +139,7 @@ python -m authority_barriers.experiments.e5_robust --scale 1 --actuator perfect 
 python -m authority_barriers.experiments.e6_backup_compare --n 30 --workers 3 ; python -m authority_barriers.experiments.e6_distributed --n 10
 python -m authority_barriers.experiments.e3b_kernel6d --shape 25 25 13 13 13 13 --threads 8
 python -m authority_barriers.experiments.e7_stress --variant all ; python -m authority_barriers.experiments.e7_corridor --n 50 ; python -m authority_barriers.experiments.e7_montecarlo --n 500 --workers 6
+python -m authority_barriers.experiments.trial_videos [--only e1_hocbf,e7_corridor] [--list]      # after the experiments
 ```
 or all of it in order through `python -m authority_barriers.reproduce`. The sequences in which the experiments were
 launched for the paper are in `scripts/run_*.sh` (see `scripts/README.md`).

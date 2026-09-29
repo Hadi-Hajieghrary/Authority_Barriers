@@ -92,7 +92,7 @@ solved by Clarabel in 2–5 ms (`theory/filters.py`, `theory/socp.py`).
 | `theory/` | The theory as code: taut-cable model, swing profile, stopping distance and its gradients, the SOCP filters (proposed, HOCBF, backup, distributed, cable-CBF, two-wall), samplers, parameter sets and the assumption checker. Pure numpy/scipy + Clarabel; no Drake plant. | [theory/README.md](theory/README.md) |
 | `simulator/` | The full-order simulator: Drake `MultibodyPlant` with rigid quadrotors and payload, unilateral spring-damper cables, thrust/torque actuation, 1 kHz geometric attitude loop, bounded wind, the 200 Hz filter as a discrete system, loggers, the trial harness and the Meshcat renderer. | [simulator/README.md](simulator/README.md) |
 | `viability/` | Viability-kernel computations for Thm. 12(ii): the level-set (Hamilton–Jacobi) solver on the 4-D planar one-cable system and the 6-D two-cable system, an independent cross-check, closed-form validation cases, and the 3-D direct-collocation search. | [viability/README.md](viability/README.md) |
-| `experiments/` | One driver per experiment (E0–E7), the shared helpers (trial cache, attribution procedure, sampled-data accounting) and the figure generators (core, optional, trial-level). | [experiments/README.md](experiments/README.md) |
+| `experiments/` | One driver per experiment (E0–E7), the shared helpers (trial cache, attribution procedure, sampled-data accounting), the figure generators (core, optional, trial-level) and the video generator. | [experiments/README.md](experiments/README.md) |
 | `configs/` | Parameter sets (YAML) and their derived constants (JSON). | [configs/README.md](configs/README.md) |
 | `reproduce.py` | Every experiment in one command (`--core`, `--all`, `--smoke`, `--results`, `--overwrite`). | — |
 | `gate.py` | Lists the result files that a gate of the simulation study needs, prints their summaries and runs the scope audit. | — |
@@ -123,6 +123,7 @@ experiments/e*.py: sample initial states, run trials (cached, parallel), compute
         ▼
 experiments/make_figures*.py, trial_figures.py, sequence_figures.py, paper_figures.py
         │                          ─▶ results/*/figures/ (one plot or frame per file, JSON sidecars)
+        │  experiments/trial_videos.py ─▶ results/videos/ (one video per scenario)
         ▼
 IEEE_ACC2027/collect_figures.py ─▶ IEEE_ACC2027/figures/
 ```
@@ -171,6 +172,7 @@ python -m authority_barriers.experiments.make_figures_optional
 python -m authority_barriers.experiments.trial_figures      # Meshcat snapshots and one plot per signal (pip install -e .[viz]; playwright install chromium)
 python -m authority_barriers.experiments.sequence_figures   # fixed-camera sequences; after trial_figures
 python -m authority_barriers.experiments.paper_figures      # the figures of the paper
+python -m authority_barriers.experiments.trial_videos       # one video per scenario (needs the [viz] extra and ffmpeg)
 ```
 
 Every driver is resumable: finished trials, collocation jobs and kernel integration states are cached, so

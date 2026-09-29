@@ -1,14 +1,15 @@
-"""Meshcat renders of the full-order scene for figures: a logged plant state (or a taut-cable state with the
-attitudes implied by the commanded thrust) is replayed in the visualization diagram, cables, commanded thrust
+"""Meshcat renders of the full-order scene for figures and videos: a logged plant state (or a taut-cable state with
+the attitudes implied by the commanded thrust) is replayed in the visualization diagram, cables, commanded thrust
 and payload velocity are drawn as lines, the wall as a slab, the camera is placed relative to the payload,
 and the Meshcat page is screenshotted through Chromium (Playwright). Nothing here touches the simulation."""
 from __future__ import annotations
 
+import io
 import time
 from pathlib import Path
 
 import numpy as np
-from pydrake.geometry import Box, Cylinder, MeshcatVisualizer, Rgba, Sphere, StartMeshcat
+from pydrake.geometry import Box, Cylinder, Meshcat, MeshcatCone, MeshcatVisualizer, Rgba, Sphere, StartMeshcat
 from pydrake.math import RigidTransform, RotationMatrix
 from pydrake.systems.framework import DiagramBuilder
 
@@ -19,13 +20,22 @@ from .plant import QUAD_COLORS, build_plant, set_initial_state
 
 
 class SceneRenderer:
-    def __init__(self, p: Params, width: int = 1400, height: int = 800, meshcat=None, walls=None):
-        """walls: list of Params (one per wall plane) to draw; default the single wall of p."""
+    # sizes and colors of what `show` draws; a renderer takes other values through `style`
+    STYLE = {"cable_radius": 0.012, "cable_rgba": (0.25, 0.25, 0.25, 1.0), "cable_per_vehicle": False,
+             "thrust_length": 1.0, "thrust_radius": 0.022, "thrust_tip": 0.045, "velocity_scale": 0.35, "velocity_radius": 0.02,
+             "h_radius": 0.012, "h_rgba": (0.45, 0.45, 0.45, 1.0), "D_radius": 0.03, "D_half_height": 0.5, "D_offset": 0.0, "arrow_heads": False}
+
+    def __init__(self, p: Params, width: int = 1400, height: int = 800, meshcat=None, walls=None, visual_scale: float = 1.0,
+                 style: dict | None = None):
+        """walls: list of Params (one per wall plane) to draw; default the single wall of p. visual_scale: drawn size of
+        the quadrotors relative to the 0.3 m airframe. style: entries of STYLE to replace."""
         self.p, self.width, self.height = p, width, height
+        self.style = {**self.STYLE, **(style or {})}
+        self._serial = 0
         self.walls = list(walls) if walls else [p]
         self.meshcat = meshcat or StartMeshcat()
         builder = DiagramBuilder()
-        self.info = build_plant(p, builder, visualize=True, detail=True, wall=False)
+        self.info = build_plant(p, builder, visualize=True, detail=True, wall=False, visual_scale=visual_scale)
         MeshcatVisualizer.AddToBuilder(builder, self.info.scene_graph, self.meshcat)
         self.diagram = builder.Build()
         self.context = self.diagram.CreateDefaultContext()
@@ -39,7 +49,7 @@ class SceneRenderer:
             m.SetObject(f"/wall/{j}", Box(0.06, 30.0, 14.0), Rgba(0.80, 0.80, 0.78, 0.28))
             m.SetTransform(f"/wall/{j}", RigidTransform(RotationMatrix.MakeFromOneVector(n, 0), pw.d0 * n + 15.0 * E3 + 0.03 * n))
         self.fov = 42.0
-        self._pw = self._browser = self._page = None
+        self._page = None
 
     # ---- drawing helpers
     def _rod(self, name: str, a: np.ndarray, b: np.ndarray, radius: float, rgba: Rgba):
@@ -50,6 +60,14 @@ class SceneRenderer:
         self.meshcat.SetObject(name, Cylinder(radius, L), rgba)
         self.meshcat.SetTransform(name, RigidTransform(RotationMatrix.MakeFromOneVector(d / L, 2), 0.5 * (a + b)))
 
+    def _head(self, name: str, tip: np.ndarray, direction: np.ndarray, length: float, radius: float, rgba: Rgba):
+        """An arrowhead: a cone with its apex at `tip` that points along `direction`."""
+        d = np.asarray(direction, float); L = float(np.linalg.norm(d))
+        if L < 1e-6:
+            self.meshcat.Delete(name); return
+        self.meshcat.SetObject(name, MeshcatCone(length, radius, radius), rgba)
+        self.meshcat.SetTransform(name, RigidTransform(RotationMatrix.MakeFromOneVector(-d / L, 2), np.asarray(tip, float)))
+
     # ---- state
     def show(self, x_plant: np.ndarray | None = None, st: State | None = None, u: np.ndarray | None = None, v_L: np.ndarray | None = None,
              path: np.ndarray | None = None, ghosts=None, D: float | None = None, h: float | None = None):
@@ -57,7 +75,7 @@ class SceneRenderer:
         (3 x K) draws the payload's past positions; `ghosts` (list of payload positions) draws the payload's earlier
         positions of a sequence as translucent spheres; `D` and `h` draw the distance line to the wall with the
         stopping point x_L + D n marked (the gap between the mark and the wall is H). Returns the payload and quadrotor positions."""
-        plant, p = self.info.plant, self.p
+        plant, p, s = self.info.plant, self.p, self.style
         self.meshcat.Delete("/ghost"); self.meshcat.Delete("/Dmark"); self.meshcat.Delete("/hline")
         if x_plant is not None:
             plant.SetPositionsAndVelocities(self.plant_ctx, np.asarray(x_plant, float))
@@ -69,23 +87,31 @@ class SceneRenderer:
         for i in range(p.N):
             pi = self.info.pos(x, f"quad{i}")
             c = QUAD_COLORS[i % len(QUAD_COLORS)]
-            self._rod(f"/cables/{i}", xL, pi, 0.012, Rgba(0.25, 0.25, 0.25, 1.0))
+            self._rod(f"/cables/{i}", xL, pi, s["cable_radius"], Rgba(*c, 1.0) if s["cable_per_vehicle"] else Rgba(*s["cable_rgba"]))
             if u is not None:
-                tip = pi + 1.0 * np.asarray(u[i], float) / p.f_max_arr[i]           # 1 m at full thrust
-                self._rod(f"/thrust/{i}", pi, tip, 0.022, Rgba(*c, 1.0))
-                self.meshcat.SetObject(f"/thrust_tip/{i}", Sphere(0.045), Rgba(*c, 1.0)); self.meshcat.SetTransform(f"/thrust_tip/{i}", RigidTransform(tip))
+                tip = pi + s["thrust_length"] * np.asarray(u[i], float) / p.f_max_arr[i]           # thrust_length (1 m) at full thrust
+                self._rod(f"/thrust/{i}", pi, tip, s["thrust_radius"], Rgba(*c, 1.0))
+                if s["arrow_heads"]:
+                    self._head(f"/thrust_tip/{i}", tip + 2.0 * s["thrust_tip"] * (tip - pi) / max(np.linalg.norm(tip - pi), 1e-9), tip - pi, 4.0 * s["thrust_tip"], 1.6 * s["thrust_tip"], Rgba(*c, 1.0))
+                else:
+                    self.meshcat.SetObject(f"/thrust_tip/{i}", Sphere(s["thrust_tip"]), Rgba(*c, 1.0)); self.meshcat.SetTransform(f"/thrust_tip/{i}", RigidTransform(tip))
         vl = v_L if v_L is not None else (self.info.lin_vel(x, "payload") if x_plant is not None else st.v_L)
-        self._rod("/velocity", xL, xL + 0.35 * np.asarray(vl, float), 0.02, Rgba(0.05, 0.05, 0.05, 1.0))
+        v_tip = xL + s["velocity_scale"] * np.asarray(vl, float)
+        self._rod("/velocity", xL, v_tip, s["velocity_radius"], Rgba(0.05, 0.05, 0.05, 1.0))
+        if s["arrow_heads"]:
+            e = (v_tip - xL) / max(np.linalg.norm(v_tip - xL), 1e-9)
+            self._head("/velocity_tip", v_tip + 4.0 * s["velocity_radius"] * e, v_tip - xL, 8.0 * s["velocity_radius"], 3.0 * s["velocity_radius"], Rgba(0.05, 0.05, 0.05, 1.0))
         if path is not None and path.shape[1] >= 2:
             self.meshcat.SetLine("/path", np.asarray(path, float), 2.0, Rgba(0.45, 0.45, 0.45, 1.0))
         for j, g in enumerate(ghosts or []):
             self.meshcat.SetObject(f"/ghost/{j}", Sphere(0.12), Rgba(0.15, 0.15, 0.15, 0.22))
             self.meshcat.SetTransform(f"/ghost/{j}", RigidTransform(np.asarray(g, float)))
         if h is not None and np.isfinite(h) and h > 0:
-            self._rod("/hline", xL, xL + float(h) * p.n_vec, 0.012, Rgba(0.45, 0.45, 0.45, 1.0))
+            self._rod("/hline", xL, xL + float(h) * p.n_vec, s["h_radius"], Rgba(*s["h_rgba"]))
         if D is not None and np.isfinite(D) and D > 0:
             base = xL + float(D) * p.n_vec                                       # where the maneuver would stop the payload
-            self._rod("/Dmark", base - 0.5 * E3, base + 0.5 * E3, 0.03, Rgba(0.48, 0.25, 0.75, 1.0))
+            base = base + s["D_offset"] * E3
+            self._rod("/Dmark", base - s["D_half_height"] * E3, base + s["D_half_height"] * E3, s["D_radius"], Rgba(0.48, 0.25, 0.75, 1.0))
         quads = np.array([self.info.pos(x, f"quad{i}") for i in range(p.N)])
         return {"xL": xL, "quads": quads, "centroid": quads.mean(axis=0)}
 
@@ -112,6 +138,66 @@ class SceneRenderer:
                 self.meshcat.SetLine(f"/wallgrid/{j}/v{k}", np.column_stack([c + s * r - half_h * E3, c + s * r + half_h * E3]), 1.2, col)
             for k, s in enumerate(np.arange(-half_h, half_h + 1e-9, step)):
                 self.meshcat.SetLine(f"/wallgrid/{j}/h{k}", np.column_stack([c - half_w * r + s * E3, c + half_w * r + s * E3]), 1.2, col)
+
+    def set_wall_panel(self, lateral: tuple, alt: tuple, step: float = 1.0, thickness: float = 0.06):
+        """The panel of every wall between the lateral coordinates lateral = (low, high) (measured along r of the set p)
+        and the altitudes alt = (low, high), with a grid of `step` metres. A panel that begins at the lateral position of
+        the payload and extends toward the camera is seen, from beside, to the side of the point that the payload approaches."""
+        self.meshcat.Delete("/wallgrid")
+        lo, hi = float(lateral[0]), float(lateral[1]); z0, z1 = float(np.floor(alt[0])), float(np.ceil(alt[1]))
+        r = self.p.r_vec                                       # one lateral axis for every wall (the walls of a corridor are parallel)
+        for j, pw in enumerate(self.walls):
+            n = pw.n_vec
+            at = lambda s, z: pw.d0 * n + s * r + z * E3
+            self.meshcat.SetObject(f"/wall/{j}", Box(thickness, hi - lo, z1 - z0), Rgba(0.93, 0.93, 0.91, 0.45))
+            self.meshcat.SetTransform(f"/wall/{j}", RigidTransform(RotationMatrix(np.column_stack([n, r, np.cross(n, r)])), at(0.5 * (lo + hi), 0.5 * (z0 + z1)) + 0.5 * thickness * n))
+            ss = np.arange(lo, hi + 1e-9, step); zs = np.arange(z0, z1 + 1e-9, step)
+            a = [at(s, z0) for s in ss] + [at(lo, z) for z in zs] + [at(hi, z0)]
+            b = [at(s, z1) for s in ss] + [at(hi, z) for z in zs] + [at(hi, z1)]
+            self.meshcat.SetLineSegments(f"/wallgrid/{j}", np.array(a).T - 0.01 * n[:, None], np.array(b).T - 0.01 * n[:, None], 1.2, Rgba(0.50, 0.50, 0.48, 1.0))
+
+    def set_floor(self, along: tuple, across: tuple, altitude: float, step: float = 1.0):
+        """A grid of `step` metres in the horizontal plane at `altitude`, between the coordinates along = (low, high) on the
+        lateral axis r and across = (low, high) on the wall normal n: the reference for a motion along the walls."""
+        n, r = self.p.n_vec, self.p.r_vec
+        ss = np.arange(np.floor(along[0]), np.ceil(along[1]) + 1e-9, step); cs = np.arange(np.floor(across[0]), np.ceil(across[1]) + 1e-9, step)
+        at = lambda s, c: s * r + c * n + altitude * E3
+        a = [at(s, cs[0]) for s in ss] + [at(ss[0], c) for c in cs]
+        b = [at(s, cs[-1]) for s in ss] + [at(ss[-1], c) for c in cs]
+        self.meshcat.SetLineSegments("/floor", np.array(a).T, np.array(b).T, 1.0, Rgba(0.66, 0.66, 0.64, 1.0))
+
+    def set_plumb(self, xL: np.ndarray, altitude: float):
+        """The vertical from the payload down to the floor grid, with a dot where it meets the floor."""
+        xL = np.asarray(xL, float); foot = np.array([xL[0], xL[1], altitude])
+        self._rod("/plumb/line", foot, xL, 0.005, Rgba(0.45, 0.45, 0.45, 1.0))
+        self.meshcat.SetObject("/plumb/foot", Cylinder(0.07, 0.004), Rgba(0.35, 0.35, 0.35, 1.0)); self.meshcat.SetTransform("/plumb/foot", RigidTransform(foot))
+
+    def set_backdrop(self, h_max: float, alt: tuple, lateral: float, step: float = 1.0, wall: Params | None = None):
+        """A grid of `step` metres in the vertical plane that contains the wall normal, at the lateral coordinate
+        r . x = lateral, from the wall back to the distance h_max and over the altitudes alt = (low, high): the backdrop
+        against which a camera that moves with the payload shows the motion."""
+        pw = wall or self.p; n, r = pw.n_vec, pw.r_vec
+        hs = np.arange(0.0, h_max + 1e-9, step); zs = np.arange(np.floor(alt[0]), np.ceil(alt[1]) + 1e-9, step)
+        at = lambda h, z: (pw.d0 - h) * n + lateral * r + z * E3
+        a = [at(h, zs[0]) for h in hs] + [at(hs[0], z) for z in zs]
+        b = [at(h, zs[-1]) for h in hs] + [at(hs[-1], z) for z in zs]
+        self.meshcat.SetLineSegments("/backdrop", np.array(a).T, np.array(b).T, 1.0, Rgba(0.66, 0.66, 0.64, 1.0))
+
+    def set_reference(self, xL: np.ndarray, length: float | None = None, wall: Params | None = None):
+        """Lines attached to the payload in the vertical plane of the wall normal: the vertical, which separates the cables
+        that lean toward the wall from those behind the payload, and the two leans +-z_bar of the operational cone."""
+        pw = wall or self.p; y = -pw.n_vec; L = float(length or 1.25 * self.p.l_arr.max()); xL = np.asarray(xL, float)
+        self._rod("/reference/vertical", xL, xL + L * E3, 0.006, Rgba(0.35, 0.35, 0.35, 1.0))
+        c = np.sqrt(1.0 - pw.z_bar ** 2)
+        for name, sgn in (("behind", 1.0), ("ahead", -1.0)):
+            self._rod(f"/reference/{name}", xL, xL + L * (sgn * pw.z_bar * y + c * E3), 0.004, Rgba(0.62, 0.62, 0.60, 1.0))
+
+    def set_breadcrumbs(self, pts: np.ndarray, radius: float = 0.03, start: int = 0):
+        """Dots at earlier positions of the payload (K x 3), one per fixed interval of time, so that their spacing
+        shows the speed; `start` is the number of dots that are already drawn."""
+        for j in range(start, len(pts)):
+            self.meshcat.SetObject(f"/crumbs/{j}", Sphere(radius), Rgba(0.30, 0.30, 0.30, 1.0))
+            self.meshcat.SetTransform(f"/crumbs/{j}", RigidTransform(np.asarray(pts[j], float)))
 
     # ---- camera
     FOV = {"side": 42.0, "rear": 42.0, "close_side": 50.0, "close_front": 50.0, "close_low": 55.0, "close_top": 50.0, "arena_side": 45.0, "arena_high": 45.0}
@@ -187,13 +273,17 @@ class SceneRenderer:
         return {"view": "sequence", "camera": cam.tolist(), "target": c.tolist(), "fov": fov}
 
     # ---- screenshots
+    _shared = {"pw": None, "browser": None, "pages": 0}        # one browser for the renderers of a process, one page per renderer
+
     def _ensure_browser(self):
         if self._page is not None:
             return
-        from playwright.sync_api import sync_playwright
-        self._pw = sync_playwright().start()
-        self._browser = self._pw.chromium.launch(headless=True, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-        self._page = self._browser.new_page(viewport={"width": self.width, "height": self.height})
+        S = SceneRenderer._shared
+        if S["browser"] is None:
+            from playwright.sync_api import sync_playwright
+            S["pw"] = sync_playwright().start()
+            S["browser"] = S["pw"].chromium.launch(headless=True, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
+        self._page = S["browser"].new_page(viewport={"width": self.width, "height": self.height}); S["pages"] += 1
         self._page.goto(self.meshcat.web_url())
         time.sleep(2.0)
         # hide the viewer's widgets (dat.GUI controls, stats box) so that only the scene is captured
@@ -209,10 +299,39 @@ class SceneRenderer:
             self._page.screenshot(path=str(path), timeout=1000.0 * timeout_s)
         return path
 
+    def set_viewport(self, width: int, height: int):
+        self.width, self.height = int(width), int(height)
+        if self._page is not None:
+            self._page.set_viewport_size({"width": self.width, "height": self.height})
+
+    def parallel(self, width_m: float, near: float = 0.01, far: float = 400.0):
+        """Parallel projection that shows width_m metres across the frame; the pose is set with SetCameraPose."""
+        cam = Meshcat.OrthographicCamera(); hw = 0.5 * float(width_m); hh = hw * self.height / self.width
+        cam.left, cam.right, cam.top, cam.bottom, cam.near, cam.far, cam.zoom = -hw, hw, hh, -hh, near, far, 1.0
+        self.meshcat.SetCamera(cam)
+
+    def look(self, cam: np.ndarray, target: np.ndarray, fov: float):
+        self.meshcat.SetCameraPose(np.asarray(cam, float), np.asarray(target, float))
+        self.meshcat.SetProperty("/Cameras/default/rotated/<object>", "fov", float(fov))
+
+    def capture(self):
+        """The scene as an image, for sequences of many frames: a serial number is sent after the scene, the page reports
+        it back once it has processed every message before it, then the page renders and is screenshotted."""
+        from PIL import Image
+        self._ensure_browser()
+        self._serial += 1
+        self.meshcat.SetProperty("/sync", "position", [float(self._serial), 0.0, 0.0])      # an empty node carries the number
+        self.meshcat.Flush()
+        self._page.wait_for_function("(k) => viewer.scene_tree.find(['sync']).object.position.x === k", arg=float(self._serial), timeout=60000.0)
+        self._page.evaluate("() => new Promise(r => { viewer.render(); requestAnimationFrame(() => r(true)); })")
+        return Image.open(io.BytesIO(self._page.screenshot(type="png"))).convert("RGB")
+
     def close(self):
-        if self._browser is not None:
-            self._browser.close(); self._pw.stop()
-            self._pw = self._browser = self._page = None
+        if self._page is not None:
+            S = SceneRenderer._shared
+            self._page.close(); self._page = None; S["pages"] -= 1
+            if S["pages"] == 0:
+                S["browser"].close(); S["pw"].stop(); S["browser"] = S["pw"] = None
 
 
 def stamp_size(width: int, text: str) -> int:

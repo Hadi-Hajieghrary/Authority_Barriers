@@ -52,9 +52,12 @@ QUAD_COLORS = [(0.16, 0.47, 0.84), (0.92, 0.41, 0.20), (0.11, 0.69, 0.48), (0.93
 
 
 def build_plant(p: Params, builder, visualize: bool = False, J: np.ndarray | None = None, detail: bool = False,
-                wall: bool = False) -> PlantInfo:
+                wall: bool = False, visual_scale: float = 1.0) -> PlantInfo:
     """detail: quadrotor bodies rendered as a cross of arms with four rotor discs (one color per vehicle) instead of a
-    plain box; wall: the constraint plane n^T x = d0 rendered as a large translucent slab on the world body."""
+    plain box; wall: the constraint plane n^T x = d0 rendered as a large translucent slab on the world body;
+    visual_scale: size of the drawn quadrotors relative to the 0.3 m airframe (the model treats the vehicles as
+    points, so the drawn size changes nothing but the picture)."""
+    s = float(visual_scale)
     J = J_QUAD if J is None else np.asarray(J, float)
     if visualize:
         plant, scene_graph = AddMultibodyPlantSceneGraph(builder, time_step=0.0)
@@ -74,13 +77,13 @@ def build_plant(p: Params, builder, visualize: bool = False, J: np.ndarray | Non
                 continue
             c = QUAD_COLORS[i % len(QUAD_COLORS)]
             body_rgba, rotor_rgba = np.array([*c, 1.0]), np.array([*c, 0.55])
-            plant.RegisterVisualGeometry(b, RigidTransform(), Box(0.08, 0.08, 0.04), f"quad{i}_hub", body_rgba)
+            plant.RegisterVisualGeometry(b, RigidTransform(), Box(0.08 * s, 0.08 * s, 0.04 * s), f"quad{i}_hub", body_rgba)
             for j, ang in enumerate((np.pi / 4, 3 * np.pi / 4)):                    # two arms as a cross
                 R = RotationMatrix.MakeZRotation(ang)
-                plant.RegisterVisualGeometry(b, RigidTransform(R, [0, 0, 0]), Box(0.3, 0.02, 0.015), f"quad{i}_arm{j}", body_rgba)
+                plant.RegisterVisualGeometry(b, RigidTransform(R, [0, 0, 0]), Box(0.3 * s, 0.02 * s, 0.015 * s), f"quad{i}_arm{j}", body_rgba)
             for j, (sx, sy) in enumerate(((1, 1), (1, -1), (-1, 1), (-1, -1))):        # rotor discs at the arm tips
-                pos = [sx * 0.15 * np.cos(np.pi / 4), sy * 0.15 * np.sin(np.pi / 4), 0.02]
-                plant.RegisterVisualGeometry(b, RigidTransform(pos), Cylinder(0.06, 0.006), f"quad{i}_rotor{j}", rotor_rgba)
+                pos = [sx * 0.15 * s * np.cos(np.pi / 4), sy * 0.15 * s * np.sin(np.pi / 4), 0.02 * s]
+                plant.RegisterVisualGeometry(b, RigidTransform(pos), Cylinder(0.06 * s, 0.006 * s), f"quad{i}_rotor{j}", rotor_rgba)
     if visualize and wall:
         n = p.n_vec
         R = RotationMatrix.MakeFromOneVector(n, 0)                                  # box x-axis along the wall normal
