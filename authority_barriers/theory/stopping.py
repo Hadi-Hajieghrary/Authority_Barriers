@@ -1,12 +1,14 @@
 """Stopping distance D(x) of the braking maneuver (eq. D), its maximizing times T*(x), and the
 exact partial derivatives of E(t; x) (Prop. 17(a)).
 
-Per cable, the time-optimal swing zeta~_i is quadratic on [0, t1_i] and [t1_i, t2_i] and constant
-afterwards, and phi_i is linear on each side of zero. Merging the at most 4N breakpoints (switch,
+Per cable, the swing zeta~_i is quadratic on [0, t1_i] and [t1_i, t2_i] and constant
+afterwards (profile.pieces), and phi_i is linear on each side of zero. Merging the at most 4N breakpoints (switch,
 arrival, zero crossings) gives intervals on which alpha~ is a quadratic, v~ = v - int alpha~ a
 cubic and E = int v~ a quartic. The maximizers of E over t >= 0 are t = 0 or roots of v~.
 Gradients: dE/dv = t, dE/dzeta_i = -iint phi_i'(zeta~_i) d_zeta zeta~_i / m_L, and the same with
 d_omega; the breakpoints are held fixed because alpha~ is continuous there (App. A(ii), App. C).
+The derivatives of zeta~_i are linear in t on every interval, and quadratic for a swing that starts
+on or above the deceleration curve of a swing with nu_dec < nu.
 """
 from __future__ import annotations
 
@@ -98,8 +100,8 @@ class Maneuver:
     a: np.ndarray        # (K, 3) local coefficients of alpha~
     vt: np.ndarray       # (K, 4) local coefficients of v~
     E: np.ndarray        # (K, 5) local coefficients of E
-    gz: np.ndarray       # (K, N, 2) local linear coefficients of d alpha~/d zeta_i
-    gw: np.ndarray       # (K, N, 2) same for omega_i
+    gz: np.ndarray       # (K, N, 3) local coefficients (constant, linear, quadratic) of d alpha~/d zeta_i
+    gw: np.ndarray       # (K, N, 3) same for omega_i
     G1z: np.ndarray      # (K, N) int_0^{tau_k} of gz
     G2z: np.ndarray      # (K, N) iint up to tau_k
     G1w: np.ndarray
@@ -133,7 +135,7 @@ class Maneuver:
     def zeta_tilde(self, t):
         """(N, len(t)) swings of all cables."""
         t = np.atleast_1d(np.asarray(t, float))
-        return np.stack([PF.zeta_tilde(t, self.zeta[i], self.omega[i], self.data.nu, self.data.zeta_bar)[0]
+        return np.stack([PF.zeta_tilde(t, self.zeta[i], self.omega[i], self.data.nu, self.data.zeta_bar, self.data.nu_dec)[0]
                          for i in range(self.N)]) if self.N else np.zeros((0, t.size))
 
     def grad_E(self, t):
@@ -141,8 +143,8 @@ class Maneuver:
         t = float(t)
         k = int(self.interval_of(t))
         s = t - self.tau[k]
-        gz = -(self.G2z[k] + self.G1z[k] * s + self.gz[k, :, 0] * s ** 2 / 2.0 + self.gz[k, :, 1] * s ** 3 / 6.0)
-        gw = -(self.G2w[k] + self.G1w[k] * s + self.gw[k, :, 0] * s ** 2 / 2.0 + self.gw[k, :, 1] * s ** 3 / 6.0)
+        gz = -(self.G2z[k] + self.G1z[k] * s + self.gz[k, :, 0] * s ** 2 / 2.0 + self.gz[k, :, 1] * s ** 3 / 6.0 + self.gz[k, :, 2] * s ** 4 / 12.0)
+        gw = -(self.G2w[k] + self.G1w[k] * s + self.gw[k, :, 0] * s ** 2 / 2.0 + self.gw[k, :, 1] * s ** 3 / 6.0 + self.gw[k, :, 2] * s ** 4 / 12.0)
         return t, gz, gw
 
     def stationary_times(self) -> np.ndarray:
@@ -165,13 +167,14 @@ def build(v: float, zeta, omega, data: BarrierData) -> Maneuver:
     zeta = np.atleast_1d(np.asarray(zeta, float)).copy()
     omega = np.atleast_1d(np.asarray(omega, float)).copy()
     N = zeta.size
-    nu, zb, mL = data.nu, data.zeta_bar, data.m_L
+    nu, zb, mL, nd = data.nu, data.zeta_bar, data.m_L, data.nu_dec
+    nd_ = nu if nd is None else nd
     in_V = bool(np.all(PF.in_V(zeta, omega, nu, zb, tol=1e-12))) if N else True
     clamped = False
     if not in_V:
         zeta, omega, clamped = PF.clamp_to_V(zeta, omega, nu, zb)
-    r, t1, t2 = PF.switching(zeta, omega, nu, zb)
-    zc = PF.zero_crossings_batch(zeta, omega, nu, zb) if N else np.zeros((0, 3))
+    r, t1, t2, acc1, kz, kw = PF.pieces(zeta, omega, nu, zb, nd)
+    zc = PF.zero_crossings_batch(zeta, omega, nu, zb, nd) if N else np.zeros((0, 3))
     bps = np.concatenate([[0.0], t1[t1 > 0], t2[t2 > t1], zc[~np.isnan(zc)]])
     tau = np.unique(np.round(bps, 13))
     tau = tau[tau >= 0.0]
@@ -183,8 +186,8 @@ def build(v: float, zeta, omega, data: BarrierData) -> Maneuver:
     T_bar = np.asarray(data.T_bar, float)
     if N:
         pc = PF.piece_index(M_, t1[None, :], t2[None, :])                     # (K, N)
-        val, d1, d2 = PF.eval_piece(pc, T_, zeta[None, :], omega[None, :], nu, zb, t2[None, :])
-        valm, _, _ = PF.eval_piece(pc, M_, zeta[None, :], omega[None, :], nu, zb, t2[None, :])
+        val, d1, d2 = PF.eval_piece(pc, T_, zeta[None, :], omega[None, :], nu, zb, t2[None, :], nd, acc1[None, :])
+        valm, _, _ = PF.eval_piece(pc, M_, zeta[None, :], omega[None, :], nu, zb, t2[None, :], nd, acc1[None, :])
         slope = np.where(valm > 0, T_bar[None, :], data.T_min) * np.ones((K, N))
         a0 = (slope * val).sum(1) / mL + data.offset
         a1 = (slope * d1).sum(1) / mL
@@ -192,17 +195,20 @@ def build(v: float, zeta, omega, data: BarrierData) -> Maneuver:
         rs = np.where(r > 0, r, 1.0)[None, :]
         s0 = t2[None, :] - T_
         fac = 1.0 - omega[None, :] / rs
-        gz0 = np.where(pc == 0, 1.0, np.where(pc == 1, nu * s0 / rs, 0.0))
-        gz1 = np.where(pc == 1, -nu / rs, 0.0) * np.ones((K, N))
-        gw0 = np.where(pc == 0, T_ * np.ones((K, N)), np.where(pc == 1, s0 * fac, 0.0))
-        gw1 = np.where(pc == 0, 1.0, np.where(pc == 1, -fac, 0.0)) * np.ones((K, N))
+        kz_, kw_, one = kz[None, :], kw[None, :], np.ones((K, N))
+        gz0 = np.where(pc == 0, 1.0 + kz_ * T_ ** 2, np.where(pc == 1, nd_ * s0 / rs, 0.0))
+        gz1 = np.where(pc == 0, 2.0 * kz_ * T_, np.where(pc == 1, -nd_ / rs, 0.0)) * one
+        gz2 = np.where(pc == 0, kz_, 0.0) * one
+        gw0 = np.where(pc == 0, T_ + kw_ * T_ ** 2, np.where(pc == 1, nd_ * s0 * fac / nu, 0.0))
+        gw1 = np.where(pc == 0, 1.0 + 2.0 * kw_ * T_, np.where(pc == 1, -nd_ * fac / nu, 0.0)) * one
+        gw2 = np.where(pc == 0, kw_, 0.0) * one
         sc = slope / mL
-        gz = np.stack([gz0 * sc, gz1 * sc], -1)
-        gw = np.stack([gw0 * sc, gw1 * sc], -1)
+        gz = np.stack([gz0 * sc, gz1 * sc, gz2 * sc], -1)
+        gw = np.stack([gw0 * sc, gw1 * sc, gw2 * sc], -1)
     else:
         slope = np.zeros((K, 0))
         a0 = np.full(K, data.offset); a1 = np.zeros(K); a2 = np.zeros(K)
-        gz = np.zeros((K, 0, 2)); gw = np.zeros((K, 0, 2))
+        gz = np.zeros((K, 0, 3)); gw = np.zeros((K, 0, 3))
     a = np.stack([a0, a1, a2], 1)
     # sweep over the intervals, vectorized: v~ and E at the interval starts are cumulative sums
     Dk = delta[:-1]
@@ -214,10 +220,10 @@ def build(v: float, zeta, omega, data: BarrierData) -> Maneuver:
     E = np.stack([Ek, vk, -a0 / 2.0, -a1 / 6.0, -a2 / 12.0], 1)
 
     def cum(g):
-        g0, g1 = g[:-1, :, 0], g[:-1, :, 1]
+        g0, g1, g2 = g[:-1, :, 0], g[:-1, :, 1], g[:-1, :, 2]
         D_ = Dk[:, None]
-        G1 = np.vstack([np.zeros((1, N)), np.cumsum(g0 * D_ + g1 * D_ ** 2 / 2.0, axis=0)])
-        G2 = np.vstack([np.zeros((1, N)), np.cumsum(G1[:-1] * D_ + g0 * D_ ** 2 / 2.0 + g1 * D_ ** 3 / 6.0, axis=0)])
+        G1 = np.vstack([np.zeros((1, N)), np.cumsum(g0 * D_ + g1 * D_ ** 2 / 2.0 + g2 * D_ ** 3 / 3.0, axis=0)])
+        G2 = np.vstack([np.zeros((1, N)), np.cumsum(G1[:-1] * D_ + g0 * D_ ** 2 / 2.0 + g1 * D_ ** 3 / 6.0 + g2 * D_ ** 4 / 12.0, axis=0)])
         return G1, G2
 
     G1z, G2z = cum(gz)

@@ -5,14 +5,14 @@
 \includegraphics[width=0.24\textwidth]{sequence_1.png}\hfill
 \includegraphics[width=0.24\textwidth]{sequence_2.png}\hfill
 \includegraphics[width=0.24\textwidth]{sequence_3.png}
-\caption{Four frames of a collocation trajectory for the mixed cable configuration at $v_0=4\,\mathrm{m/s}$ from $h_0=0.56\Dres$. The vehicles reposition their cables behind the payload and enter the certified set. The frames show one example of a safe trajectory; the kernel was not computed exhaustively.}\label{fig:sequence}
+\caption{Four frames of a collocation trajectory for the mixed cable configuration (B) at $v_0=4\,\mathrm{m/s}$ from $h_0=0.56\Dres$. The quadrotors reposition their cables behind the payload and enter $\Xrf$. The frames show one example of a safe trajectory; the kernel was not computed exhaustively.}\label{fig:sequence}
 \vspace{-5pt}
 \end{figure*}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.90\columnwidth]{e1_margin.png}
-\caption{HOCBF feasibility margin in a perfect-actuator trial. The feasible-to-infeasible transition occurs before a cable can enter the braking half-space.}\label{fig:e1}
+\includegraphics[width=0.95\columnwidth]{exact_comparison.png}
+\caption{Exact taut-cable model, one initial state of the certified set $\mathcal S$ and one adversarial nominal input, in the plane of wall distance and approach speed; the wall is the right edge. The HOCBF filters lose feasibility (crosses) while every cable leans toward the wall, and reach the wall (triangles). The authority filter brings every cable into the braking half-space (circle) and stops at the wall (square); the dashed curve shows $\Dres$ of its states.}\label{fig:exact}
 \end{figure}
 
 \begin{figure}[t]
@@ -23,58 +23,33 @@
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.98\columnwidth]{trial_a_distances.png}
-\caption{Wall distance $h$ (solid), predicted stopping distance $\Dres$ (dashed), and optimistic stopping distance $\Drel$ (dotted) in a perfect-actuator trial under an adversarial nominal command. The trial illustrates the continuous-time maneuver but does not prove sampled safety.}\label{fig:trial-distances}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.90\columnwidth,trim=0 25.4 0 0,clip]{trial_b_swing.png}
-\caption{Cable swing coordinates $z_i$ of the four vehicles in the trial of Fig.~\ref{fig:trial-distances}.}\label{fig:trial-swing}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.90\columnwidth]{trial_c_phase.png}
-\caption{Swing states $(z_i,\dot z_i)$ in the trial of Fig.~\ref{fig:trial-distances} (circle: start; square: end); the shaded region is the admissible swing set $\mathcal V$.}\label{fig:trial-phase}
-\vspace{-5pt}
-\end{figure}
-
-\begin{figure}[t]
-\centering
 \includegraphics[width=0.90\columnwidth]{sandwich_a.png}
-\caption{Viability band for configuration A, cables initially leaning toward the wall: reserved (dashed) and optimistic (dotted) stopping distances. Dots are the smallest \emph{found and re-simulated} collocation trajectories; they do not prove where the kernel boundary lies. Colored curves are two closed-loop trajectories of the sampled filter.}\label{fig:sandwich-a}
-\vspace{-5pt}
-\end{figure}
-
-\begin{figure}
-\centering
-\subfloat[Configuration B]{\includegraphics[width=0.49\columnwidth]{sandwich_b.png}\label{fig:sandwich-b}}\hfill
-\subfloat[Configuration C]{\includegraphics[width=0.49\columnwidth]{sandwich_c.png}\label{fig:sandwich-c}}
-\caption{Viability bands for (a) mixed cable directions and (b) cables already behind the payload; curves and dots as in Fig.~\ref{fig:sandwich-a}.}\label{fig:sandwich-bc}
-\vspace{-5pt}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.82\columnwidth]{thrust_budget.png}
-\caption{Thrust budget of one vehicle: the reserved rectangle lies in the available thrust ball.}\label{fig:thrust}
-\vspace{-5pt}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.9\columnwidth]{nu_sensitivity.png}
-\caption{Sensitivity of the reserved stopping distance to a hypothetical swing acceleration $\nu$ for configuration A at $v_0=3\,\mathrm{m/s}$. The shaded interval respects the stated rate-consistency assumption; points to its right are diagnostic calculations, not certified operating points.}\label{fig:nu}
+\caption{Viability band for configuration A, cables initially leaning toward the wall: reserved (dashed) and optimistic (dotted) stopping distances. Dots are the smallest \emph{found and re-simulated} collocation trajectories; they do not prove where the kernel boundary lies. Colored curves are two closed-loop trajectories of the sampled authority filter.}\label{fig:sandwich-a}
 \vspace{-5pt}
 \end{figure}
 
 \section{Numerical study}\label{sec:sim}
-Figures~\ref{fig:profile} and \ref{fig:trial-distances}--\ref{fig:trial-phase} illustrate the predicted and realized swing profiles. The full-order simulation has four $1.5\,\mathrm{kg}$ vehicles carrying a $1\,\mathrm{kg}$ point payload on $1\,\mathrm m$ cables. It uses $T_{\min}=1\,\mathrm N$, $f_{\max}=44\,\mathrm N$, $\bar T_i=3.2\,\mathrm N$, $\rho_i=34\,\mathrm N$, $a_{\max}=13\,\mathrm{m/s^2}$, $\bar z=0.239$, $\bar w=0.171$, $\bar\omega=1\,\mathrm{s^{-1}}$, and $\nu=\nu_w=0.5\,\mathrm{s^{-2}}$. Figure~\ref{fig:thrust} shows the thrust split. The thrust-reserve bound is arithmetically consistent: $\sqrt{(\bar T_i+m_ia_{\max}+m_il_i\bar\omega^2)^2+\rho_i^2}=41.73\,\mathrm N<(f_{\max}\mathrm = 44 N)$. Its spring--damper cables can go slack; the filter runs at $200\,\mathrm{Hz}$. The code of the simulations and videos of the trials are available online.\footnote{\url{https://github.com/Hadi-Hajieghrary/Authority_Barriers}}
+Figure~\ref{fig:profile} illustrates the predicted swing profiles. The team has four $1.5\,\mathrm{kg}$ quadrotors carrying a $1\,\mathrm{kg}$ point payload on $1\,\mathrm m$ cables, with $T_{\min}=1\,\mathrm N$, $f_{\max}=44\,\mathrm N$, $\bar T_i=3.2\,\mathrm N$, $\rho_i=34\,\mathrm N$, $a_{\max}=13\,\mathrm{m/s^2}$, $\theta_q=20^\circ$, $\bar z=0.239$, $\bar w=0.171$, $\bar\omega=1\,\mathrm{s^{-1}}$, and $\nu=\nu_w=0.5\,\mathrm{s^{-2}}$. The thrust-reserve bound holds: $\sqrt{(\bar T_i+m_ia_{\max}+m_il_i\bar\omega^2)^2+\rho_i^2}=41.73\,\mathrm N<f_{\max}$. The code and videos of the trials are available online.\footnote{\url{https://github.com/Hadi-Hajieghrary/Authority_Barriers}}
 
-All 690 HOCBF trials over the tested gain pairs and actuator modes lost QP feasibility before a cable entered the braking half-space (Fig.~\ref{fig:e1}); this does not establish initial feasibility for arbitrary gains. Of 100 trials started close to $H=0$ under an adversarial nominal input, the sampled authority filter reached the wall in 59 despite a feasible QP at its sampling instants (Fig.~\ref{fig:sampled}). In 56 trials the spring--damper cables temporarily lost the positive-tension condition. Thus the continuous-time invariant-set theorem does not certify these runs. The largest barrier loss was $0.85\,\mathrm m$ within one $5\,\mathrm{ms}$ hold; no contact was observed above an initial margin of $0.78\,\mathrm m$ in the tested 100-state sweep. This margin is empirical and holds for the tested distribution only. A $1\,\mathrm{kHz}$ attitude loop also incurred $17$--$43\,\mathrm N$ tracking errors during command jumps.
+\emph{Exact model.} Theorem~\ref{thm:sandwich}(i) was tested in its own setting: the authority filter \eqref{eq:filter} on the taut-cable model under a zero-order hold, with $T^{\mathrm h}_i=2.7\,\mathrm N$, $\nu'=0.4\,\mathrm{s^{-2}}$, $c_\downarrow=5$ and $c_\uparrow=2\,\mathrm{m/s^2}$, $\epsilon=0.1\,\mathrm s$, $c_a=1.25$, and the band $0\le\chi\le45\,\mathrm m$. The 100 initial states have random swing states, speeds of $1$--$4\,\mathrm{m/s}$, and $H(x_0)\in[0,0.05\,\Dres(x_0)]$, between $1\,\mathrm{mm}$ and $0.38\,\mathrm m$; the nominal input is adversarial, the full thrust of every quadrotor toward the wall, tilted $40^\circ$ upward; a trial lasts $6\,\mathrm s$. Table~\ref{tab:exact} gives the result. With a period of $1\,\mathrm{ms}$ the barrier stayed above $-0.05\,\mathrm{mm}$, one trial reached the wall, by $2\,\mu\mathrm m$, and the altitude stayed in its band in every trial; the payload climbed by up to $29.9\,\mathrm m$. Figure~\ref{fig:exact} compares the authority filter with HOCBF filters with linear gains $(k_1,k_2)\in\{(0.5,10),(1,20),(2,40)\}\,\mathrm{s^{-1}}$ from one state with $v=3\,\mathrm{m/s}$, every cable at $z_i=-0.8\bar z$, and $h=1.02\,\Dres=7.76\,\mathrm m$. Each HOCBF program is feasible at the start and infeasible after $0.15$, $0.52$, and $0.78\,\mathrm s$, with every cable leaning toward the wall; its relaxation with a penalized slack reaches the wall at $7.3$--$9.2\,\mathrm{m/s}$. The authority filter has every cable in the braking half-space after $0.81\,\mathrm s$ and stops the payload $10\,\mathrm{mm}$ from the wall, with $H$ between $0.15$ and $0.01\,\mathrm m$. Without the bound on the swing accelerations, the filter follows the nominal input with swing accelerations of about $20\,\mathrm{s^{-2}}$, forty times $\nu$; the stopping distance then changes within one period by more than its gradient predicts, and the contacts multiply; a margin of the kind derived for sampled-data CBFs~\cite{breeden2022sampled} is not available for $\Dres$. With the hover floor the stopping distance from $3\,\mathrm{m/s}$ with every cable at $-\bar z$ is $9.18\,\mathrm m$, against $6.56\,\mathrm m$ with the floor $T_{\min}$ and the time-optimal swing: carrying the weight costs $2.6\,\mathrm m$.
 
-Direct-collocation searches covered three initial cable configurations at eight speeds, with each candidate subsequently simulated. When cables already lean away from the wall, the observed feasible distance is about $0.97$--$0.98$ times $\Dres$; when a swing is required, feasible trajectories can begin at only $0.25$--$0.55\,\Dres$ (Figs.~\ref{fig:sandwich-a} and~\ref{fig:sandwich-bc}). Figure~\ref{fig:sequence} shows one of the found trajectories. The large gap when cables lean toward the wall is driven in part by the reserved swing acceleration: $\nu=0.5\,\mathrm{s^{-2}}$ needs about $1.8\,\mathrm{s}$ to cross the allowed angle range, while the physical thrust in the simulations can reach the swing-rate limit much sooner. Figure~\ref{fig:nu} varies a hypothetical $\nu$ to show this sensitivity; values beyond the shaded admissible region cannot be substituted into the theorem without changing its assumptions. A collocation success gives an example trajectory but a failure does not locate the viability boundary. The numerical evidence therefore supports the qualitative gap between the reserved and relaxed models, while it cannot validate either set inclusion or a universal percentage gap.
+\begin{table}[t]
+\caption{The authority filter on the exact taut-cable model, 100 trials per row.}\label{tab:exact}
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+Period & $|\ddot\zeta|\le c_a\nu_\zeta$ & Contacts & Deepest & $\min H$ & $\chi$ in band\\
+\midrule
+$1\,\mathrm{ms}$ & yes & 1 & $0.002\,\mathrm{mm}$ & $-0.05\,\mathrm{mm}$ & 100\\
+$5\,\mathrm{ms}$ & yes & 4 & $0.4\,\mathrm{mm}$ & $-7\,\mathrm{mm}$ & 100\\
+$1\,\mathrm{ms}$ & no & 6 & $0.1\,\mathrm{mm}$ & $-13\,\mathrm{mm}$ & 97\\
+$5\,\mathrm{ms}$ & no & 33 & $1.7\,\mathrm{mm}$ & $-104\,\mathrm{mm}$ & 100\\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Evaluating $\Dres$ takes $0.5$--$0.6\,\mathrm{ms}$ and the filter $2$--$4.5\,\mathrm{ms}$, close to the $5\,\mathrm{ms}$ sampling period; solver failures, model mismatch, and inter-sample excursions preclude a real-time guarantee. A certified zero-order-hold error bound and an explicit rate constraint are needed before claims of sampled safety are made.
+\emph{Full-order model.} The remaining trials use rigid quadrotors, spring--damper cables that can go slack, and a filter at $200\,\mathrm{Hz}$. They were run with the wall barrier alone, that is, with the floor $T_{\min}$ in $\phi_i$, the time-optimal swing, and neither \eqref{eq:filter-alt} nor the bound on the swing accelerations; the altitude is free in them, and the payload climbs by $54\,\mathrm m$ in one trial before it stops. All 690 HOCBF trials lost QP feasibility before a cable entered the braking half-space: the three gain pairs of Fig.~\ref{fig:exact}, each from 100 states with every cable leaning toward the wall at $2$--$4\,\mathrm{m/s}$, with thrust vectors applied directly and with a $1\,\mathrm{kHz}$ attitude loop, and from 30 states with three quadrotors. This does not establish initial feasibility for arbitrary gains. Of 100 trials started with $H(x_0)\in[0,0.05\,\Dres]$ under the adversarial nominal input, the sampled authority filter reached the wall in 59 despite a feasible QP at its sampling instants (Fig.~\ref{fig:sampled}); in 56 trials a cable was slack at some sample. The largest barrier loss was $0.85\,\mathrm m$ within one $5\,\mathrm{ms}$ hold; no contact was observed above an initial margin of $0.78\,\mathrm m$ in a second sweep of 100 states. This margin is empirical and holds for the tested distribution only. The attitude loop incurred $17$--$43\,\mathrm N$ tracking errors during command jumps.
 
+\emph{Conservatism.} Direct-collocation searches with three quadrotors covered three initial cable configurations at rest (A: $z_i=-0.15$; B: $z=(-0.15,0,0.15)$; C: $z_i=\bar z$) at eight speeds from $0.5$ to $4\,\mathrm{m/s}$, with each candidate subsequently simulated; like the full-order trials they constrain the wall distance only. When cables already lean away from the wall, the observed feasible distance is about $0.97$--$0.98$ times $\Dres$; when a swing is required, feasible trajectories can begin at only $0.25$--$0.55\,\Dres$ (Fig.~\ref{fig:sandwich-a} shows configuration A). Figure~\ref{fig:sequence} shows one of the found trajectories. The large gap is driven in part by the reserved swing acceleration: $\nu=0.5\,\mathrm{s^{-2}}$ needs $1.96\,\mathrm{s}$ to cross the allowed angle range, while the physical thrust can reach the swing-rate limit much sooner, and Assumption~\ref{ass:op} admits no $\nu$ above $0.54\,\mathrm{s^{-2}}$ at this rate limit. A collocation success gives an example trajectory, but a failure does not locate the viability boundary, so the evidence supports the qualitative gap between the two models and validates neither set inclusion.
+
+\emph{Cost.} A backup filter that integrates $\plan$ numerically \cite{chen2021backup} reproduced $\Dres$ within a relative error of $1.1\cdot10^{-6}$ and the commands of the filter within $0.4\,\%$ of $f_{\max}$ at 60 states, at $129\,\mathrm s$ per evaluation against $6\,\mathrm{ms}$. In Python with the solver Clarabel, evaluating $\Dres$ takes $0.5$--$0.6\,\mathrm{ms}$ and the filter with the wall barrier $2$--$4.5\,\mathrm{ms}$ for two to eight quadrotors, close to the $5\,\mathrm{ms}$ sampling period; solver failures, model mismatch, and inter-sample excursions preclude a real-time guarantee.

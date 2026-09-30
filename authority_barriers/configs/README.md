@@ -5,7 +5,7 @@ the assumptions of the paper constrain is derived from them by `authority_barrie
 5 % margin, and the result is written to `derived/params_<name>.json` by
 
 ```
-python -m authority_barriers.theory.params A A1 A2 A_N3 A_mL12     # regenerates derived/*.json and prints the assumption margins
+python -m authority_barriers.theory.params A A_alt A1 A2 A_N3 A_mL12     # regenerates derived/*.json and prints the assumption margins
 ```
 
 `authority_barriers.theory.params.load_set("<name>")` derives the set on the fly (the JSON files are the human-readable
@@ -42,6 +42,7 @@ experiment uses to say at which f_max Assumption 7 fails.
 | Set | Use | Key values |
 |---|---|---|
 | `A` | every closed-loop Drake trial (E1, E2, E4, E5, E6, E7) | N = 4, m_L = 1 kg, m_i = 1.5 kg, l_i = 1 m, T_min = 1 N, θ_q = 20°, z̄ = 0.239, w̄ = 0.171, ν = ν_w = 0.5 s⁻², derived T̄ = 3.2 N, ρ = 34 N, f_max = 44 N, a_max = 13 m/s², ω̄ = 1 s⁻¹; κ_H = 1, filter period 5 ms, attitude period 1 ms; ball thrust set (θ_max = π, decision D-5) |
+| `A_alt` | the exact-model runs with altitude barriers (E8) | set A with an altitude band of 0 to 45 m (`alt_band`), the hover floor T_h = 2.7 N (`hover_floor` times the hover share at the edge of the cone, rounded up to 0.1 N), the swing deceleration ν_dec = 0.8 ν = 0.4 s⁻² (`nu_dec_frac`), and the vertical accelerations of the altitude hold c_dn = 5, c_up = 2 m/s²; every derived constant equals that of set A |
 | `A1` | the planar one-cable kernel (E3) | one cable, same per-cable constants |
 | `A2` | the planar two-cable kernel (E3b) | two cables |
 | `A_N3` | the N = 3 replication of E1 (D-9) and the 3-D collocation | m_L scaled to 0.75 kg so that the per-cable constants are unchanged |

@@ -66,26 +66,41 @@ sphere invariants ‖q_i‖ = 1, q_i·q̇_i = 0 (measured by `drift`), and retur
 `integrate_capped` adds a wall-clock cap (the braking maneuver's switching layer can make error-controlled
 integrators crawl, compromise C-14).
 
-### `profile.py` — time-optimal swing of one coordinate (Sec. IV-C, App. A)
+### `profile.py` — swing of one coordinate (Sec. IV-C, App. A)
 For one swing coordinate ζ with rate ω and the acceleration bound ν: the switching times
 (`switching` → r, t1, t2), the piecewise-quadratic profile ζ̃(t) with first and second derivatives
 (`zeta_tilde`), its partial derivatives with respect to the initial data (`d_zeta_tilde`, App. A(ii),
 used by the barrier gradients), the admissible set V(ν, z̄) (`bounds_V`, `in_V`, `clamp_to_V`), the
-initial acceleration `accel0` and the zero crossings of ζ̃ (where φ_i changes slope).
+initial acceleration `accel0` and the zero crossings of ζ̃ (where φ_i changes slope). With `nu_dec` < ν the swing
+accelerates at ν and decelerates at `nu_dec` (`pieces` → r, t1, t2, the acceleration of the first piece and the
+halves of its derivatives); it then arrives through the interior of V(ν, z̄), and from a state on or above the
+curve ω² = 2 ν_dec (z̄ − ζ) it decelerates at the constant rate ω²/(2(z̄ − ζ)). Without `nu_dec` every function
+returns the time-optimal swing.
 
 ### `authority.py` — directional authority and barrier data (Def. 8, Lemma 9)
 `phi(z)` = T̄ z₊ − T_min z₋ per cable, `BarrierData` = the tuple (T̄, T_min, ν, ζ̄, m_L, offset) with which
 α_y and D are evaluated, and the three instances used in the campaign: `BarrierData.nominal(p)` (the
 paper's data), `.relaxed(p)` (T̄_rel = f_max-based caps and ν_rel: the relaxed authority of Thm. 12(ii)'s
 outer bound D_rel) and `.robust(p)` (the substitutions of Rem. 18: ν_rob = ν − d̄_i/(m l) − d̄_L/(m_L l),
-offset −d̄_L/m_L). `support_function_bruteforce` is the test oracle for Lemma 9.
+offset −d̄_L/m_L). `support_function_bruteforce` is the test oracle for Lemma 9. `BarrierData.certified(p)` is the
+data of the maneuver with altitude barriers (paper, Sec. IV-D): the floor of φ is the hover floor T_h of the set,
+with N T_h cos θ_q ≥ m_L g, and the swing decelerates at `nu_dec`.
 
 ### `maneuver.py` — the braking maneuver π♯ (Prop. 15)
 `plan(st, p, data)` returns a `Plan` with the tensions (T̄_i if z_i > 0 else T_min), the initial swing
 accelerations of the time-optimal profile, the transverse law `w_law` (saturated PD that keeps (w, ẇ)
 in V(ν_w, w̄)), the perpendicular thrusts that realize both through the Gram matrix of eq. "gram"
 (`swing_thrust`), the resulting thrust vectors and the braking acceleration b = α_y(z); `admissible`
-checks the plan against U(x) (thrust norms, tension floor, D-4 cone).
+checks the plan against U(x) (thrust norms, tension floor, D-4 cone). With the certified data the floor of the
+tensions is T_h and the maneuver has a second phase (`holding`, `hold_tension`): once the stopping time of
+`altitude.stop_time` is zero, one uniform tension holds the altitude, with a linear layer around zero vertical speed.
+
+### `altitude.py` — altitude barriers of the maneuver (paper, Sec. IV-D)
+`stop_time(mn)`: the end t_s of the braking phase as the largest of N + 1 candidate times, each smooth in the state
+and decreasing at unit rate along the maneuver; `climb`, `drop`: the bounds Δ↑, Δ↓ on the climb and the drop of the
+payload with their partial derivatives; `evaluate(st, p, mn)`: H↑ = (alt_max − χ) − Δ↑ and H↓ = (χ − alt_min) − Δ↓
+with one barrier and gradient per candidate time; `rows`: the affine rows Ḣ ≥ −κ_alt H of the filter in the
+variables of the cone program.
 
 ### `stopping.py` — stopping distance and its gradients (eq. D, Prop. 17(a))
 `build(v, zeta, omega, data)` assembles the piecewise-polynomial `Maneuver` (α̃ quadratic, ṽ cubic, E
@@ -112,7 +127,9 @@ values Ḣ_j, and a `rows` dict of extras).
   active only on ∂V). If the program is infeasible it re-solves with a slack on the barrier rows
   (`relax_on_infeasible`, decision D-15) and reports `relaxed=True`; if that program fails as well it
   returns the plan's own thrust (status `fallback_plan`). A swing state outside V is projected into V before
-  D is evaluated (`clamped=True`).
+  D is evaluated (`clamped=True`). Options: `altitude=True` adds the rows of the altitude barriers and uses the
+  certified barrier data; `accel_bound=c` adds |z̈_i| ≤ c ν and |ẅ_i| ≤ c ν_w, which bound the change of the swing
+  rates within one sampling period.
 - `HOCBFFilter` — the high-order CBF baseline of Sec. III: row b(T) ≥ β(x) with β from the class-K pair
   (α₁, α₂) and, optionally, a class-K swing-rate row so that Thm. 5's hypothesis ‖q̇_i‖ ≤ ω̄ holds by
   construction.
@@ -146,8 +163,8 @@ support points, feasibility tests and per-node speed bounds (for the CFL conditi
 
 ### `closed_loop.py` — the sampled loop on the exact model
 `run_sampled(filter, nominal, x0, ...)`: the zero-order-hold filter on the taut ODE itself (no plant).
-Used by the attribution procedure and by `common.calibrate_margin` to measure Rem. 19's sampled-data
-deficit on the model alone.
+Used by the attribution procedure, by `common.calibrate_margin` to measure Rem. 19's sampled-data
+deficit on the model alone, and by the experiment E8 (`experiments/e8_exact_model.py`).
 
 ## Data flow of one filter tick
 

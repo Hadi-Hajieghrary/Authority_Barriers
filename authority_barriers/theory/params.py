@@ -46,6 +46,15 @@ class Params:
     d_bar_i: float = 0.3
     n: tuple = (1.0, 0.0, 0.0)   # wall normal, horizontal unit vector (eq. h)
     d0: float = 0.0              # wall plane n^T x = d0
+    # ---- altitude barriers and swing deceleration (sets with a hover floor; None = not used)
+    T_h: float | None = None     # hover floor of the tensions of the maneuver [N]: N T_h cos(theta_q) >= m_L g
+    nu_dec: float | None = None  # deceleration of the swing [1/s^2], < nu
+    alt_min: float | None = None # altitude band of the payload [m]
+    alt_max: float | None = None
+    c_dn: float | None = None    # vertical deceleration of the altitude hold while the payload climbs [m/s^2]
+    c_up: float | None = None    # vertical acceleration of the altitude hold while the payload descends [m/s^2]
+    kappa_alt: float = 1.0       # gamma(H) = kappa_alt * H for the altitude barriers
+    hold_lead: float = 0.1       # the altitude hold begins this long before the last swing arrives [s]
 
     # ---- wall geometry
     @property
@@ -90,6 +99,15 @@ class Params:
     @property
     def alpha_sat_rel(self) -> float:
         return float(np.sum(self.T_bar_rel) * self.z_bar / self.m_L)
+
+    # ---- vertical acceleration of the payload during the braking phase of the maneuver (tensions in [T_h, T_bar])
+    @property
+    def c_low(self) -> float:               # smallest: every cable at the floor and at the edge of the cone
+        return float(self.N * self.T_h * math.cos(self.theta_q) / self.m_L - self.g)
+
+    @property
+    def c_high(self) -> float:              # largest: every cable at the cap and vertical
+        return float(np.sum(self.T_bar_arr) / self.m_L - self.g)
 
     @property
     def a_low(self) -> float:               # lower bound on q_i^T a used by the tilt condition
@@ -156,7 +174,23 @@ def derive_set(cfg: dict) -> Params:
         omega_bar=omega_bar, theta_max=math.radians(float(cfg["theta_max_deg"])) if "theta_max_deg" in cfg else math.pi,
         g=g, kappa_H=float(cfg.get("kappa_H", 1.0)), d_bar_L=float(cfg.get("d_bar_L", 0.1)),
         d_bar_i=float(cfg.get("d_bar_i", 0.3)),
+        **_altitude(cfg, N, m_L, g, thq, nu, T_min, T_bar),
     )
+
+
+def _altitude(cfg: dict, N: int, m_L: float, g: float, thq: float, nu: float, T_min: float, T_bar: float) -> dict:
+    """Constants of the altitude barriers, present when the configuration has an altitude band: the hover floor
+    (the hover share at the edge of the cone, rounded up to 0.1 N), the swing deceleration, and the vertical
+    accelerations of the altitude hold, which the uniform tension m_L (g + c) / sum_i varrho_i realizes inside
+    [T_min, T_bar] for every cable configuration of the cone."""
+    if "alt_band" not in cfg:
+        return {}
+    T_h = math.ceil(float(cfg.get("hover_floor", 1.0)) * m_L * g / (N * math.cos(thq)) * 10) / 10
+    c_dn = float(cfg.get("c_dn", math.floor((g - N * T_min / m_L) * 2) / 2 - 0.5))
+    c_up = float(cfg.get("c_up", math.floor((N * T_bar * math.cos(thq) / m_L - g) * 2) / 2))
+    lo, hi = cfg["alt_band"]
+    return {"T_h": T_h, "nu_dec": float(cfg.get("nu_dec_frac", 0.8)) * nu, "alt_min": float(lo), "alt_max": float(hi),
+            "c_dn": c_dn, "c_up": c_up, "kappa_alt": float(cfg.get("kappa_alt", 1.0))}
 
 
 def load_set(name: str) -> Params:
@@ -218,11 +252,20 @@ def check_assumptions(p: Params, min_margin: float = 0.05) -> dict:
     add("hover: 1.2 m_L g <= N min_i(T_bar_i) cos(theta_q)", 1.2 * p.m_L * p.g, p.N * float(np.min(p.T_bar_arr)) * math.cos(p.theta_q))
     add("hover: 1.15 g <= a_max", 1.15 * p.g, p.a_max)
     add("alpha_sat > 0", 0.0, p.alpha_sat)
+    if p.T_h is not None:
+        add("floor: m_L g <= N T_h cos(theta_q) (no descent while braking)", p.m_L * p.g, p.N * p.T_h * math.cos(p.theta_q))
+        add("floor: T_min <= T_h", p.T_min, p.T_h)
+        add("floor: T_h <= min_i T_bar_i", p.T_h, float(np.min(p.T_bar_arr)))
+        add("swing: nu_dec < nu", p.nu_dec, p.nu)
+        add("hold: T_min <= m_L (g - c_dn) / N", p.T_min, p.m_L * (p.g - p.c_dn) / p.N)
+        add("hold: m_L (g + c_up) / (N cos(theta_q)) <= min_i T_bar_i", p.m_L * (p.g + p.c_up) / (p.N * math.cos(p.theta_q)), float(np.min(p.T_bar_arr)))
+        add("band: alt_min < alt_max", p.alt_min, p.alt_max)
     add("thrust-to-weight <= 3", float(np.max(p.twr)), 3.0)
     return out
 
 
-def all_ok(margins: dict, min_margin: float = 0.05, ignore_prefixes=("thrust-to-weight", "alpha_sat", "caps", "Xop", "hover", "D-4")) -> bool:
+def all_ok(margins: dict, min_margin: float = 0.05,
+           ignore_prefixes=("thrust-to-weight", "alpha_sat", "caps", "Xop", "hover", "D-4", "floor", "swing", "hold", "band")) -> bool:
     """True when every inequality holds and every assumption row (A7/A13/A14) has margin >= min_margin."""
     for k, mg in margins.items():
         if not mg.ok:

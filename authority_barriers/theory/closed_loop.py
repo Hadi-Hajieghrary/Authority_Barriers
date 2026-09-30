@@ -13,11 +13,12 @@ from .taut_model import f_ambient, pack, unpack, rhs_from_thrust
 
 def run_sampled(x0: State, filt, nominal, p: Params, t_f: float, dt: float | None = None, rtol=1e-9, atol=1e-11,
                 stop_on_wall: bool = True):
-    """Returns dict of arrays per tick: t, h, v, H, D, feasible, u (N,3), T (N,), state (packed)."""
+    """Returns dict of arrays per tick: t, h, v, H, D, feasible, u (N,3), T (N,), state (packed), b, hdot0, the
+    altitude barriers H_up, H_down (NaN for a filter without them) and the solve time."""
     dt = p.dt_filter if dt is None else dt
     x = pack(x0).copy()
     n = int(round(t_f / dt))
-    rec = {k: [] for k in ("t", "h", "v", "H", "D", "feasible", "u", "T", "x", "b", "hdot0")}
+    rec = {k: [] for k in ("t", "h", "v", "H", "D", "feasible", "u", "T", "x", "b", "hdot0", "H_up", "H_down", "solve_time")}
     termination = "horizon"
     for k in range(n + 1):
         t = k * dt
@@ -28,6 +29,8 @@ def run_sampled(x0: State, filt, nominal, p: Params, t_f: float, dt: float | Non
         rec["H"].append(getattr(res, "H", np.nan)); rec["D"].append(getattr(res, "D", np.nan))
         rec["feasible"].append(res.feasible); rec["u"].append(res.u.copy()); rec["T"].append(out["T"]); rec["x"].append(x.copy())
         rec["b"].append(res.b)
+        rec["H_up"].append(getattr(res, "H_up", np.nan)); rec["H_down"].append(getattr(res, "H_down", np.nan))
+        rec["solve_time"].append(getattr(res, "solve_time", np.nan))
         rec["hdot0"].append(float(res.hdot[0]) if getattr(res, "hdot", np.zeros(0)).size else np.nan)
         if stop_on_wall and st.h(p) < 0:
             termination = "wall_contact"; break

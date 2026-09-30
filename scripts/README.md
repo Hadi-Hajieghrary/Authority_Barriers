@@ -6,7 +6,7 @@ Every script changes to the repository root first, so it can be started from any
 
 | Script | What it does | Output |
 |---|---|---|
-| `build_paper.sh [--collect]` | compiles the paper with `latexmk`. Where a results directory exists (`results/` or `$SIM_RESULTS_DIR`), it first verifies the figure files of `IEEE_ACC2027/figures/` against their sources there; with `--collect` it first writes them from there | `IEEE_ACC2027/build/main.pdf` |
+| `build_paper.sh` | compiles the paper with `latexmk` | `IEEE_ACC2027/build/main.pdf` |
 
 ## Launch sequences (`run_*.sh`)
 

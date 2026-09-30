@@ -23,7 +23,9 @@ def phi_slope(z, T_bar, T_min: float):
 @dataclass(frozen=True)
 class BarrierData:
     """Data (T_bar, T_min, nu, zeta_bar, m_L, offset) with which alpha_y and D are evaluated.
-    offset = -g e3^T y is zero for a wall with horizontal normal."""
+    offset = -g e3^T y is zero for a wall with horizontal normal. T_min is the floor of the tensions of
+    the maneuver (the hover floor T_h in the data with altitude barriers); nu_dec, if given, is the
+    deceleration of the swing (profile.pieces), nu its acceleration and the bound of the set V."""
     T_bar: np.ndarray
     T_min: float
     nu: float
@@ -31,6 +33,7 @@ class BarrierData:
     m_L: float
     offset: float = 0.0
     kind: str = "nominal"
+    nu_dec: float | None = None
 
     @property
     def N(self) -> int:
@@ -49,6 +52,15 @@ class BarrierData:
     def nominal(p: Params) -> "BarrierData":
         return BarrierData(np.asarray(p.T_bar, float), p.T_min, p.nu, p.z_bar, p.m_L,
                            -p.g * float(E3 @ p.y_vec), "nominal")
+
+    @staticmethod
+    def certified(p: Params) -> "BarrierData":
+        """Data of the maneuver with altitude barriers: the floor of its tensions is the hover floor T_h
+        (N T_h cos(theta_q) >= m_L g) and its swing decelerates at nu_dec < nu. Needs a set with these constants."""
+        if p.T_h is None or p.nu_dec is None:
+            raise ValueError(f"set {p.name} has no hover floor T_h or no swing deceleration nu_dec")
+        return BarrierData(np.asarray(p.T_bar, float), float(p.T_h), p.nu, p.z_bar, p.m_L,
+                           -p.g * float(E3 @ p.y_vec), "certified", float(p.nu_dec))
 
     @staticmethod
     def relaxed(p: Params) -> "BarrierData":

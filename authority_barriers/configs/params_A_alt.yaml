@@ -1,0 +1,25 @@
+# Set A with the constants of the altitude barriers: hover floor of the maneuver's tensions, swing deceleration,
+# altitude band of the payload. Every other constant is the one of set A.
+name: A_alt
+N: 4
+m_L: 1.0          # payload mass [kg]
+m: 1.5            # quadrotor mass [kg] (each)
+l: 1.0            # cable length [m]
+T_min: 1.0        # tension floor [N]
+theta_q_deg: 20.0 # cable cone half-angle
+z_bar_frac: 0.7   # z_bar = frac * sin(theta_q)
+w_bar_frac: 0.5   # w_bar = frac * sin(theta_q)
+nu: 0.5           # swing acceleration bound for z [1/s^2]
+nu_w: 0.5
+a_max: 12.0       # floor for the specific-force bound [m/s^2]; raised if D-4 consistency needs it
+rho_fb: 1.0       # feedback reserve inside rho [N]
+margin: 0.05
+hover_margin: 1.2
+kappa_H: 1.0
+d_bar_L: 0.1   # D-16 revised: Rem. 18 needs nu_rob = nu - d_bar_i/(m l) - d_bar_L/(m_L l) > 0
+d_bar_i: 0.3   # attitude error <= 0.15 N, wind <= 0.1 N, a_hat lag <= 0.05 N
+
+# altitude barriers
+alt_band: [0.0, 45.0]      # [m]; the trials start at 15 m
+hover_floor: 1.0           # T_h = hover_floor * m_L g / (N cos theta_q), rounded up to 0.1 N
+nu_dec_frac: 0.8           # swing deceleration nu_dec = nu_dec_frac * nu

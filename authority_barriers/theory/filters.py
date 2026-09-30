@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from pydrake.solvers import ClarabelSolver, MathematicalProgram, SolutionResult
 
+from . import altitude as ALT
 from . import profile as PF
 from . import stopping as SD
 from .authority import BarrierData
@@ -77,6 +78,8 @@ class FilterResult:
     in_V: bool = True
     clamped: bool = False
     rows: dict = field(default_factory=dict)
+    H_up: float = np.nan        # altitude barriers (filters with altitude=True)
+    H_down: float = np.nan
 
 
 def _sampled_swing_rows(cp: ConeProgram, A_acc: np.ndarray, b_acc: float, zeta: float, zetad: float,
@@ -123,14 +126,22 @@ class ProposedFilter:
 
     def __init__(self, p: Params, data: BarrierData | None = None, kappa_H: float | None = None,
                  swing_mode: str = "sampled", dt: float | None = None, relax_on_infeasible: bool = True,
-                 solver=None, hdot_margin: float = 0.0, rows: str = "maximizers"):
-        """hdot_margin: additional slack delta on the barrier rows, Hdot_j >= -gamma(H) + delta (Rem. 19).
+                 solver=None, hdot_margin: float = 0.0, rows: str = "maximizers", altitude: bool = False,
+                 accel_bound: float | None = None):
+        """altitude: add the rows of the altitude barriers H_up, H_down (theory/altitude.py); needs a set with a
+        hover floor and the certified barrier data, which is then the default.
+        accel_bound: factor c >= 1 of the rows |zddot_i| <= c nu and |wddot_i| <= c nu_w. The maneuver uses swing
+        accelerations up to nu and nu_w (C3), so it satisfies the rows; they bound the change of the swing rates
+        within one sampling period. c > 1 leaves room for the one-step rows of a swing state on the boundary of V.
+        hdot_margin: additional slack delta on the barrier rows, Hdot_j >= -gamma(H) + delta (Rem. 19).
         rows: "maximizers" = the paper's filter (17c), one row per maximizing time of E (ties within
         1e-9); "local_maxima" = one row per local maximizer of E (D-21), which the braking maneuver
         also satisfies with equality (v~ = 0 there), so feasibility on X_RF is unchanged while a branch
         of E that overtakes the current maximum between two ticks is already constrained."""
         self.p = p
-        self.data = data or BarrierData.nominal(p)
+        self.altitude = bool(altitude)
+        self.accel_bound = None if accel_bound is None else float(accel_bound)
+        self.data = data or (BarrierData.certified(p) if altitude else BarrierData.nominal(p))
         self.kappa_H = p.kappa_H if kappa_H is None else kappa_H
         self.margin = float(hdot_margin)
         self.rows_mode = rows
@@ -167,6 +178,8 @@ class ProposedFilter:
         sw = swing_affine(cp, p, st)
         H = st.h(p) - res.D
         rows = self.barrier_rows(st, res, sw)
+        self._alt = ALT.evaluate(st, p, res.maneuver, tol=4.0 * self.dt) if self.altitude and np.isfinite(res.D) else None
+        alt_rows = ALT.rows(st, p, self._alt, sw.Az, sw.bz) if self._alt is not None else []
         sl = None
         if slack:
             sl = cp.prog.NewContinuousVariables(1, "slack")
@@ -178,6 +191,18 @@ class ProposedFilter:
                 cp.prog.AddLinearConstraint(np.concatenate([A, [1.0]])[None, :], [lb], [np.inf], np.concatenate([cp.x, sl]))
             else:
                 cp.prog.AddLinearConstraint(A[None, :], [lb], [np.inf], cp.x)
+        for A, b, Ha in alt_rows:
+            if not np.any(A):                                  # no input in this row: the barrier does not depend on the input here
+                continue
+            lb = -p.kappa_alt * Ha - b
+            if slack:
+                cp.prog.AddLinearConstraint(np.concatenate([A, [1.0]])[None, :], [lb], [np.inf], np.concatenate([cp.x, sl]))
+            else:
+                cp.prog.AddLinearConstraint(A[None, :], [lb], [np.inf], cp.x)
+        if self.accel_bound is not None:
+            cz_, cw_ = self.accel_bound * self.data.nu, self.accel_bound * p.nu_w
+            cp.prog.AddLinearConstraint(sw.Az, -cz_ - sw.bz, cz_ - sw.bz, cp.x)
+            cp.prog.AddLinearConstraint(sw.Aw, -cw_ - sw.bw, cw_ - sw.bw, cp.x)
         active = {}
         for i in range(p.N):
             if self.swing_mode == "sampled":
@@ -221,7 +246,8 @@ class ProposedFilter:
         hdot = np.array([A @ xv + b for A, b in rows])
         return FilterResult(u, xv[:p.N], xv[p.N:3 * p.N], feasible, relaxed, slack, status,
                             time.perf_counter() - t0, float(bT @ xv[:p.N] + b0), H, res.D, res.t_star, hdot,
-                            res.in_V, res.clamped, {"active_tangency": active, "n_barrier_rows": len(rows)})
+                            res.in_V, res.clamped, {"active_tangency": active, "n_barrier_rows": len(rows)},
+                            self._alt.H_up if self._alt is not None else np.nan, self._alt.H_down if self._alt is not None else np.nan)
 
     # ---- diagnostics -------------------------------------------------------------------
     def check_plan(self, st: State, tol: float = 1e-7) -> dict:
@@ -248,6 +274,10 @@ class ProposedFilter:
             "b_matches_alpha": abs((cp.b_coeffs()[0] @ pl.T + cp.b_coeffs()[1]) - self.data.alpha(st.z(p))) < 1e-9,
             "in_V_ok": bool(res.in_V and not res.clamped),
         }
+        if self.altitude:
+            alt = ALT.evaluate(st, p, res.maneuver)
+            ar = np.array([A @ x + b + p.kappa_alt * Ha for A, b, Ha in ALT.rows(st, p, alt, sw.Az, sw.bz)])
+            out.update({"H_up": alt.H_up, "H_down": alt.H_down, "slack_altitude": float(np.min(ar)), "altitude_ok": bool(np.all(ar >= -tol))})
         out["all_ok"] = all(v for k, v in out.items() if k.endswith("_ok") or k.endswith("matches") or k == "b_matches_alpha")
         return out
 

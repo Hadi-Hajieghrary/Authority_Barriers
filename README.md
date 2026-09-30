@@ -52,6 +52,7 @@ loop, slack cables, wind, modeling errors).
 | directional authority and barrier data (Definition 5, Lemma 6) | `authority_barriers/theory/authority.py` |
 | time-optimal swing profile (Eq. 11) | `authority_barriers/theory/profile.py` |
 | stopping distance, maximizing times, exact gradients (Eq. 12, Proposition 13) | `authority_barriers/theory/stopping.py` |
+| altitude barriers of the maneuver (Sec. IV-D) | `authority_barriers/theory/altitude.py` |
 | braking maneuver π♯ (Proposition 12) | `authority_barriers/theory/maneuver.py` |
 | authority-barrier filter (Eq. 17) and its decomposition | `authority_barriers/theory/filters.py`, `socp.py` |
 
@@ -76,9 +77,10 @@ One driver per experiment in `authority_barriers/experiments/`.
 | E2 `e2_thm12i.py` | Theorem 9(i): invariance and feasibility of the authority-barrier filter under an adversarial nominal input | Thm. 12(i) | Sec. VI |
 | E3 `e3_collocation.py` | Theorem 9(ii): smallest distance from which direct collocation finds a safe trajectory, against D_rel and D (N = 3) | Thm. 12(ii) | Sec. VI |
 | E3 `e3_kernel.py`, E3b `e3b_kernel6d.py` | Theorem 9(ii): level-set viability kernels of the planar models with one and two cables | Thm. 12(ii) | not reported; see the known limitation below |
-| E4 `e4_prop17.py` | Proposition 13: run time of D and of the filter for N = 2 to 8; decomposition of the barrier row | Prop. 17 | Sec. VI, run times |
+| E4 `e4_prop17.py` | Proposition 13: run time of D and of the filter for N = 2 to 8; decomposition of the barrier row (code Prop. 17(b), not in the paper) | Prop. 17 | Sec. VI, run times |
 | E5 `e5_robust.py` | barrier data reduced by a disturbance budget, under wind | Rem. 18 | not reported |
-| E6 `e6_backup_compare.py`, `e6_distributed.py` | closed form against a numerically integrated backup filter; distributed filter with a lagged broadcast | Rem. 16, Prop. 17(b) | not reported |
+| E6 `e6_backup_compare.py`, `e6_distributed.py` | closed form against a numerically integrated backup filter; distributed filter with a lagged broadcast (code Prop. 17(b), not in the paper) | Rem. 16, Prop. 17(b) | not reported |
+| E8 `e8_exact_model.py` | Theorem 9(i) in its own setting: the filter with altitude barriers on the exact taut-cable model at sampling periods of 1 ms and 5 ms, and a comparison with the HOCBF filter from one state | Thm. 12(i) | Sec. VI |
 | E7 `e7_stress.py`, `e7_corridor.py`, `e7_montecarlo.py` | limits of the guarantee: thrust sweep, mass error, soft cables, swing rates; corridor between two walls; Monte Carlo study with four filters | Sec. VI | not reported |
 
 The results that the paper reports are in its Sec. VI. The figure files it includes are in `IEEE_ACC2027/figures/`;
@@ -175,7 +177,7 @@ authority_barriers/        the Python package
   reproduce.py             every experiment in one command
   gate.py                  lists the result files that each phase of the simulation study needs
 IEEE_ACC2027/              the manuscript: main.tex, macros.tex, sections/, References.bib, figures/,
-                           collect_figures.py, the IEEEtran class and bibliography style
+                           the class files and the bibliography style
 scripts/                   build_paper.sh; run_*.sh, the sequences in which the experiments were launched
 results/videos/            one video per scenario (MP4, GIF, one frame, sidecar), written by trial_videos.py
 DevContainers/             submodule with the development container (.devcontainer links to it)

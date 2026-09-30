@@ -22,7 +22,7 @@ follows:
 | Def. 4 | Definition 2 | | Assumption 14 | Assumption 11 |
 | Thm. 5 | Theorem 3 | | Prop. 15 | Proposition 12 |
 | Assumption 7 | Assumption 4 | | Rem. 16 | Sec. IV-C, after Theorem 9 |
-| Def. 8 | Definition 5 | | Prop. 17 | Proposition 13 |
+| Def. 8 | Definition 5 | | Prop. 17 | Proposition 13 (its parts (b), (c) are not in the paper) |
 | Lemma 9 | Lemma 6 | | Rem. 18 | not in the paper |
 | Def. 10 | Definition 7 | | Rem. 19 | Remark 14, a different text |
 | Lemma 11 | Lemma 8 | | filter (17) | Eq. (17) |
