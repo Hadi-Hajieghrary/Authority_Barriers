@@ -71,6 +71,6 @@ code and the result files that it writes use the numbers of the full-length manu
 ## Open items
 
 - `main.tex`: the author block gives e-mail addresses and no affiliations.
-- Length: the paper builds to 9 pages, of which the last holds about one column (the end of the references).
+- Length: the paper builds to 9 pages, of which the last holds about half a column (the end of the references).
   ACC 2027 accepts 8 pages (6 without page charges).
 - `IEEEtran.cls` is the generic class; a venue may require its own author kit.

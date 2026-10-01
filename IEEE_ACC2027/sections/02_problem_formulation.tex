@@ -5,7 +5,7 @@ Quadrotor $i\in\{1,\dots,N\}$ has position $p_i\in\R^3$, mass $m_i$, and thrust 
 The payload is a point mass $m_L$ at $x_L\in\R^3$, attached to quadrotor $i$ by a massless, inextensible cable of length $l_i$ with unit direction $q_i\in\Sph$ from the payload to the quadrotor, $p_i=x_L+l_iq_i$. The cable exerts the force $T_iq_i$ on the payload and $-T_iq_i$ on the quadrotor, with $T_i\ge0$ because a cable cannot push. With the gravitational acceleration $g$,
 \begin{align}
 m_L\ddot x_L &= \textstyle\sum_{i} T_i q_i - m_L g e_3, \label{eq:load}\\
-m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i.\nonumber
+m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i. \label{eq:veh}
 \end{align}
 The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$, where $q_i\tr q_i=1$ and $q_i\tr\dot q_i=0$. We assume every cable is taut, with tension at least $T_{\min}>0$; the filter in Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
 

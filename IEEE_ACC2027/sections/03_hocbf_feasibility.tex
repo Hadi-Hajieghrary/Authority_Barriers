@@ -7,9 +7,8 @@ For a unit vector $y$, the \emph{exact directional authority} at $x$,
 \end{equation}
 is the largest acceleration that admissible inputs can give the payload along $y$; the maximum exists because $\ddot x_L$ is affine in $u$ and $\mathcal{U}(x)$ is compact and convex ($-\infty$ if empty). Since it is attained, for any function $\beta$ of the state,
 \begin{align}
-\{u\in\mathcal{U}(x):\ b(x,u)&\ge\beta(x)\}\ne\emptyset\\
+\{u\in\mathcal{U}(x):\ b(x,u)&\ge\beta(x)\}\ne\emptyset\label{eq:iff}\\
 &\iff\alpha^{\mathrm{ex}}_y(x)\ge\beta(x).\nonumber
-\label{eq:iff}
 \end{align}
 
 Since $h$ has relative degree two with respect to the tensions, HOCBFs \cite{xiao2019control,nguyen2016exponential} apply the barrier condition twice. Let $\alpha_1$ be a continuously differentiable class-$\mathcal{K}$ function, $\alpha_2$ an extended class-$\mathcal{K}$ function, and $\psi_1:=\dot h+\alpha_1(h)=-v+\alpha_1(h)$. With $\dot v=-b$, the HOCBF condition $\dot\psi_1\ge-\alpha_2(\psi_1)$ reads

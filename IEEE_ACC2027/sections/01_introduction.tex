@@ -87,7 +87,7 @@ Safety filters restrict a nominal controller's commands to enforce state constra
 
 \end{tikzpicture}%
 }
-\caption{Two quadrotors carry a payload toward a wall. With both cables leaning toward the wall, positive tensions cannot break it; a cable must first swing to the far side (dashed).}
+\caption{Two quadrotors carry a payload toward a wall. With both cables leaning toward the wall, tensions cannot brake it; a cable must first swing to the far side (dashed).}
 \vspace{-5pt}
 \label{fig:scene}
 
@@ -111,4 +111,4 @@ Second, we derive an explicit stopping-distance certificate from a thrust-reserv
 
 Third, we derive an optimistic stopping distance that bounds the viability kernel from outside.  It identifies states from which no admissible controller can avoid wall contact.
 
-Fourth, simulations evaluate the filter against HOCBF and numerical backup-CBF baselines.  They illustrate conservatism and expose safety violations under sampled control and slack-cable dynamics.
+Fourth, simulations evaluate the filter against HOCBF and numerical backup-CBF baselines.  They quantify the conservatism of the certificate and the margin that a sampled implementation needs.
