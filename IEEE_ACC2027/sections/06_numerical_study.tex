@@ -1,19 +1,42 @@
-% The figures of this section are declared ahead of its text, in the order of their numbers.
-\begin{figure*}
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.22\textwidth]{sequence_0.png}\hfill
-\includegraphics[width=0.22\textwidth]{sequence_1.png}\hfill
-\includegraphics[width=0.22\textwidth]{sequence_2.png}\hfill
-\includegraphics[width=0.22\textwidth]{sequence_3.png}
-\caption{A collocation trajectory for configuration B at $v_0=4\,\mathrm{m/s}$ from $h_0=0.56\,\Dres$: the quadrotors swing their cables behind the payload and enter $\Xrf$.}\label{fig:sequence}
-\vspace{-2pt}
+% Left: Exact comparison
+\begin{minipage}[t]{0.35\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{exact_comparison.png}
+    \captionof{figure}{wall distance against approach speed. The HOCBF filters lose feasibility (crosses) and reach the wall (triangles); the authority filter brings every cable into the braking half-space (circle) and stops (square).}
+    \label{fig:exact}
+\end{minipage}
+\hfill
+% Right: Trajectory sequence
+\begin{minipage}[t]{0.63\textwidth}
+    \centering
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{sequence_1.png}
+        \caption{$\textbf{t=0.43 s}$, $h=1.33 m$, $v=2.90$ m/s, $D=1.58$ m, $H=-0.25$ m}
+        \label{fig:seq_1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{sequence_2.png}
+        \caption{$\textbf{t=0.90 s}$, $h=0.32$ m, $v=1.42$ m/s, $D=0.33$ m, $H=-0.01$ m}
+        \label{fig:seq_2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{sequence_3.png}
+        \caption{$\textbf{t=1.34 s}$, $h=0.00$ m, $v=0.06$ m/s, $D=0.00$ m, $H=0.00$ m}
+        \label{fig:seq_3}
+    \end{subfigure}
+
+    \captionof{figure}{A collocation trajectory for configuration B at $v_0=4\,\mathrm{m/s}$ from $h_0=0.56\,\Dres$: the quadrotors swing their cables behind the payload and enter $\Xrf$.}
+    \label{fig:sequence}
+\end{minipage}
 \end{figure*}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.95\columnwidth]{exact_comparison.png}
-\caption{Exact model, one state of $\mathcal S$, adversarial nominal input: wall distance against approach speed. The HOCBF filters lose feasibility (crosses) and reach the wall (triangles); the authority filter brings every cable into the braking half-space (circle) and stops (square). Dashed: $\Dres$ along its run.}\label{fig:exact}
-\end{figure}
 
 \begin{figure}[t]
 \centering
@@ -47,6 +70,6 @@ $5\,\mathrm{ms}$ & 4 & $0.4\,\mathrm{mm}$ & $-7\,\mathrm{mm}$ & 100\\
 
 The remaining trials use Full-order model simulations with rigid quadrotors, spring--damper cables that can go slack, thrust vectors applied directly or through a $1\,\mathrm{kHz}$ attitude loop, and a filter at $200\,\mathrm{Hz}$ with the wall barrier alone (the floor $T_{\min}$ in $\phi_i$, the time-optimal swing, and neither \eqref{eq:filter-alt} nor the bound on the swing accelerations). All 690 HOCBF trials lost QP feasibility before a cable entered the braking half-space: the three gain pairs of Fig.~\ref{fig:exact}, each from 100 states with every cable leaning toward the wall at $2$--$4\,\mathrm{m/s}$ under both actuation models, and from 30 states with three quadrotors; this does not establish initial feasibility for arbitrary gains. This model lies outside the hypotheses of Theorem~\ref{thm:sandwich}: a cable that goes slack within a $5\,\mathrm{ms}$ hold can cost the barrier up to $0.85\,\mathrm m$, so the sampled filter needs an empirical margin; in a sweep of 100 states under the adversarial nominal input, no trial started with $H(x_0)\ge0.78\,\mathrm m$ reached the wall. The margin holds only for the tested distribution.
 
-Direct-collocation searches on the taut-cable model with three quadrotors (set A scaled to $N=3$, $m_L=0.75\,\mathrm{kg}$) covered three initial cable configurations at rest (A: $z_i=-0.15$; B: $z=(-0.15,0,0.15)$; C: $z_i=\bar z$) at eight speeds from $0.5$ to $4\,\mathrm{m/s}$, each candidate re-simulated. They impose every constraint of \eqref{eq:Xop} and \eqref{eq:U} with $h\ge0$ and a terminal state in $\Xrf$, but no altitude band, and their $\Dres$ uses the floor $T_{\min}$ and the time-optimal swing; a search matched to the certified maneuver and band is left open. When cables already lean away from the wall, the found distance is $0.97$--$0.98\,\Dres$, and the hover floor changes nothing there. When a swing is required, trajectories were found from $0.25$--$0.56\,\Dres$ at 15 of the 16 speeds (the search did not converge at the remaining one), which is $0.14$--$0.53$ of the certified stopping distance with the hover floor and $\nu'$ (Fig.~\ref{fig:sandwich-a} shows configuration A with both). Figure~\ref{fig:sequence} shows one such trajectory. The large gap is driven in part by the reserved swing acceleration: $\nu=0.5\,\mathrm{s^{-2}}$ needs $1.96\,\mathrm{s}$ to cross the allowed angle range, while the physical thrust can reach the swing-rate limit much sooner, and Assumption~\ref{ass:op} admits no $\nu$ above $0.54\,\mathrm{s^{-2}}$ at this rate limit. A collocation success gives an example trajectory, but a failure does not locate the viability boundary, so the evidence supports the qualitative gap between the two models and validates neither set inclusion.
+Using the Clarabel solver in Python, evaluating $\Dres$ and its gradients takes less than $1,\mathrm{ms}$ on one core of an Intel i7-1165G7. The complete filter takes a median of $3.5,\mathrm{ms}$, with a maximum of $4.1,\mathrm{ms}$ for $N=4$, meeting the $5,\mathrm{ms}$ control period used in the full-order trials. In comparison, a backup filter based on numerical integration of $\plan$ \cite{chen2021backup} reproduces $\Dres$ with a relative error of $10^{-6}$ and the control commands within $0.4,\%$ of $f_{\max}$. However, using central-difference gradients, this approach takes $129 \,\mathrm{s}$ per evaluation, making it about four orders of magnitude slower. These results demonstrate computational feasibility within the tested setup, but a real-time guarantee would additionally require bounds on solver failures, model mismatch, and inter-sample excursions.
 
-On one core of an Intel i7-1165G7, over 200 states of the exact-model sample, evaluating $\Dres$ with its gradients takes $0.7\,\mathrm{ms}$ (median; 95th percentile $0.8$, maximum $1.0\,\mathrm{ms}$), the filter with the wall barrier alone $2.5$ ($2.7$, $3.1$) $\mathrm{ms}$, and the complete filter with the altitude and swing rows $3.5$ ($3.8$, $4.1$) $\mathrm{ms}$: below the $5\,\mathrm{ms}$ period of the full-order trials, above the $1\,\mathrm{ms}$ hold of Table~\ref{tab:exact}, which is a simulation setting. A backup filter that integrates $\plan$ numerically \cite{chen2021backup} on the same machine (Dormand--Prince, relative tolerance $10^{-8}$, central differences with step $10^{-4}$, 19 integrations per evaluation over the horizon of the maneuver plus $0.5\,\mathrm s$) reproduced $\Dres$ within a relative error of $1.1\cdot10^{-6}$ and the commands of the filter within $0.4\,\%$ of $f_{\max}$ at 60 states, at $129\,\mathrm s$ per evaluation (median; maximum $216\,\mathrm s$). Solver failures, model mismatch, and inter-sample excursions preclude a real-time guarantee.
+
