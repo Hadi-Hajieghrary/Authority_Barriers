@@ -7,21 +7,21 @@ The payload is a point mass $m_L$ at $x_L\in\R^3$, attached to quadrotor $i$ by 
 m_L\ddot x_L &= \textstyle\sum_{i} T_i q_i - m_L g e_3, \label{eq:load}\\
 m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i. \label{eq:veh}
 \end{align}
-The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$ and $(q_i,\dot q_i)\in T\Sph:=\{(q,\omega)\in\Sph\times\R^3:\ q\tr\omega=0\}$ for every $i$. Thus $q_i\tr q_i=1$ and $q_i\tr\dot q_i=0$ are part of the state manifold. We assume every cable is taut, with tension at least $T_{\min}>0$; the filter in Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
+The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$, where $q_i\tr q_i=1$ and $q_i\tr\dot q_i=0$. We assume every cable is taut, with tension at least $T_{\min}>0$; the filter in Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
 
 We decompose each thrust vector along the cable and perpendicular to it, $u_i=s_iq_i+u_i^{\perp}$ with $s_i:=q_i\tr u_i$, $u_i^\perp:=P_iu_i$, $P_i:=I-q_iq_i\tr$, and we use the \emph{specific force} of the payload, $a:=\ddot x_L+ge_3$.
 
 \begin{lemma}[Structure]\label{lem:structure}
 Along any solution of \eqref{eq:load}--\eqref{eq:veh} with taut cables:
-(a) $T_i = s_i - m_i\,q_i\tr a + m_i l_i\|\dot q_i\|^2$, so the tension depends on the inputs only through the parallel components $s=(s_1,\dots,s_N)$;
-(b) $\ddot q_i = \tfrac{1}{m_il_i}u_i^\perp - \tfrac{1}{l_i}P_i a - \|\dot q_i\|^2 q_i$, so the cable direction depends on the inputs only through $u_i^\perp$ and $a$;
-(c) $M_a(q)\,a=\sum_i s_iq_i+\sum_i m_il_i\|\dot q_i\|^2q_i$ with $M_a(q):=m_LI+\sum_i m_iq_iq_i\tr\succ0$, so the inputs determine $a$, and by (a) the tensions, uniquely and affinely.
+(a) $T_i = s_i - m_i\,q_i\tr a + m_i l_i\|\dot q_i\|^2$ with $s=(s_1,\dots,s_N)$;
+(b) $\ddot q_i = \tfrac{1}{m_il_i}u_i^\perp - \tfrac{1}{l_i}P_i a - \|\dot q_i\|^2 q_i$;
+(c) $M_a(q)\,a=\sum_i s_iq_i+\sum_i m_il_i\|\dot q_i\|^2q_i$ with $M_a(q):=m_LI+\sum_i m_iq_iq_i\tr\succ0$.
 \end{lemma}
 \begin{proof}
 Differentiate $p_i=x_L+l_iq_i$ twice and substitute \eqref{eq:load}--\eqref{eq:veh}. Since $q_i\tr\dot q_i=0$ and $q_i\tr\ddot q_i=-\|\dot q_i\|^2$, the projection of \eqref{eq:veh} along $q_i$ gives (a) and the projection perpendicular to $q_i$ gives (b); substituting (a) into \eqref{eq:load} gives (c).
 \end{proof}
 
-In words, the parallel component sets the tension, the perpendicular component swings the cable, the two share the limit $\|s_iq_i+u_i^\perp\|\le f_{\max,i}$, and the quadrotors interact only through the payload's specific force. For fixed $(q,\dot q)$, (a) and (c) define an affine bijection between $s$ and $T=(T_1,\dots,T_N)$, so we use the tensions as decision variables: given $T$, $a=\frac{1}{m_L}\sum_jT_jq_j$, and (a) returns $s_i(T)$.
+In words, the parallel component sets the tension, the perpendicular component swings the cable, the two share the limit $\|s_iq_i+u_i^\perp\|\le f_{\max,i}$, and the quadrotors interact only through the specific force, which by (c) the inputs determine uniquely. For fixed $(q,\dot q)$, (a) and (c) define an affine bijection between $s$ and $T=(T_1,\dots,T_N)$, so we use the tensions as decision variables: given $T$, $a=\frac{1}{m_L}\sum_jT_jq_j$, and (a) returns $s_i(T)$.
 
 \subsection{Constraints, viability, and the problem}
 
@@ -34,7 +34,9 @@ where $h$ is the distance from the payload to the wall. We write $v:=n\tr\dot x_
 
 We impose the operational constraints
 \begin{equation}
-\Xop:=\{x:\ e_3\tr q_i\ge\cos\theta_q,\ |z_i|\le\bar z,\ (w_i,\dot w_i)\in\mathcal V(\nu_w,\bar w),\ \|\dot q_i\|\le\bar\omega\ \forall i\},
+\begin{split}
+\Xop:=\{x:\ &e_3\tr q_i\ge\cos\theta_q,\ |z_i|\le\bar z,\\ &(w_i,\dot w_i)\in\mathcal V(\nu_w,\bar w),\ \|\dot q_i\|\le\bar\omega\ \forall i\},
+\end{split}
 \label{eq:Xop}
 \end{equation}
 with $\bar z^2+\bar w^2\le\sin^2\theta_q$, $\theta_q<\pi/2$. The upper-cone condition $e_3\tr q_i\ge\cos\theta_q$, together with the bounds on $(z_i,w_i)$, keeps every cable within $\theta_q$ of the upward vertical; the remaining conditions reserve stopping room for the transverse swing and bound the swing rate. The set $\mathcal V$ is defined in \eqref{eq:box} below. With the altitude $\chi:=e_3\tr x_L$ of the payload and a band $[\chi_{\min},\chi_{\max}]$, the constraint set is $\mathcal{C}:=\{x\in\Xop:\ h\ge 0,\ \chi_{\min}\le\chi\le\chi_{\max}\}$. The inputs must respect the thrust limits, the tension bound, and a bound $a_{\max}$ on the payload's specific force:

@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 
 import numpy as np
-from pydrake.solvers import ClarabelSolver, MathematicalProgram, SolutionResult
+from pydrake.solvers import ClarabelSolver, MathematicalProgram, SolutionResult, SolverOptions
 
 from . import altitude as ALT
 from . import profile as PF
@@ -127,9 +127,10 @@ class ProposedFilter:
     def __init__(self, p: Params, data: BarrierData | None = None, kappa_H: float | None = None,
                  swing_mode: str = "sampled", dt: float | None = None, relax_on_infeasible: bool = True,
                  solver=None, hdot_margin: float = 0.0, rows: str = "maximizers", altitude: bool = False,
-                 accel_bound: float | None = None):
+                 accel_bound: float | None = None, solver_tol: float | None = None):
         """altitude: add the rows of the altitude barriers H_up, H_down (theory/altitude.py); needs a set with a
         hover floor and the certified barrier data, which is then the default.
+        solver_tol: feasibility and gap tolerances of Clarabel (its defaults, 1e-8, when None).
         accel_bound: factor c >= 1 of the rows |zddot_i| <= c nu and |wddot_i| <= c nu_w. The maneuver uses swing
         accelerations up to nu and nu_w (C3), so it satisfies the rows; they bound the change of the swing rates
         within one sampling period. c > 1 leaves room for the one-step rows of a swing state on the boundary of V.
@@ -149,6 +150,11 @@ class ProposedFilter:
         self.dt = p.dt_filter if dt is None else dt
         self.relax = relax_on_infeasible
         self.solver = solver or ClarabelSolver()
+        self.solver_options = None
+        if solver_tol is not None:
+            self.solver_options = SolverOptions()
+            for key in ("tol_feas", "tol_gap_abs", "tol_gap_rel"):
+                self.solver_options.SetOption(ClarabelSolver.id(), key, float(solver_tol))
 
     # ---- program assembly -------------------------------------------------------------
     def barrier_rows(self, st: State, res: SD.StoppingResult, sw: SwingAffine):
@@ -226,11 +232,11 @@ class ProposedFilter:
             pl = plan_map(st, p, self.data)
             x0 = np.concatenate([pl.T, np.concatenate([cp.B[i].T @ pl.u_perp[i] for i in range(p.N)])])
             cp.prog.SetInitialGuess(cp.x, x0)
-        r = self.solver.Solve(cp.prog)
+        r = self.solver.Solve(cp.prog, None, self.solver_options)
         feasible, relaxed, slack, status = r.is_success(), False, 0.0, str(r.get_solution_result())
         if not feasible and self.relax:
             cp2, _, _, _, _, sl, _ = self.build(st, u_nom, res=res, slack=True)
-            r2 = self.solver.Solve(cp2.prog)
+            r2 = self.solver.Solve(cp2.prog, None, self.solver_options)
             if r2.is_success():
                 r, cp, relaxed, slack = r2, cp2, True, float(r2.GetSolution(sl)[0])
                 status = f"relaxed({status})"
@@ -422,7 +428,7 @@ class NumericStoppingResult:
 class BackupIntegratedFilter(ProposedFilter):
     """Backup-CBF baseline (Rem. 16, Sec. VI Q3): the same program as (17) but with the barrier data obtained
     numerically: D_num(x) = h(0) - min_t h(t) along the braking maneuver integrated on the taut-cable model
-    (RK45, rtol 1e-8), the maximizing time from the integrated profile, and the gradients in (v, z_i, zdot_i) by
+    (DOP853, rtol 1e-8, atol 1e-10), the maximizing time from the integrated profile, and the gradients in (v, z_i, zdot_i) by
     central differences (2(1 + 2N) + 1 integrations per evaluation). Each integration is capped in wall time; a
     timed-out evaluation falls back to the closed form and is counted."""
 

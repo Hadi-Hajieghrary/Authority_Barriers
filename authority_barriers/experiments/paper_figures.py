@@ -212,18 +212,24 @@ def fig3_storyboard(out: Path, render: bool = True):
 
 # ------------------------------------------------------------------ 4. viability sandwich with trajectories
 def fig4_sandwich(out: Path):
+    from authority_barriers.experiments.bench_library import with_N
     from authority_barriers.experiments.e3_collocation import configuration, team
     p3 = team() if callable(team) else load_set("A_N3")
-    dn, dr = BarrierData.nominal(p3), BarrierData.relaxed(p3)
-    vv = np.linspace(0.05, 4.0, 120); files = []
+    p3c = with_N(load_set("A_alt"), 3)                      # the same team with the hover floor and the swing deceleration
+    dn, dr, dc = BarrierData.nominal(p3), BarrierData.relaxed(p3), BarrierData.certified(p3c)
+    vv = np.linspace(0.05, 4.0, 120); files = []; certified = []
     for cfg, letter in zip("ABC", "abc"):
         fig, ax = one(3.0 if cfg == "A" else 2.08, 2.7)
         z, w = configuration(cfg, p3); zd = np.zeros(p3.N)
-        Dv = np.array([SD.D_of(v, z, zd, dn) for v in vv]); Dr = np.array([SD.D_of(v, z, zd, dr) for v in vv])
+        Dv = np.array([SD.D_of(v, z, zd, dn) for v in vv]); Dr = np.array([SD.D_of(v, z, zd, dr) for v in vv]); Dc = np.array([SD.D_of(v, z, zd, dc) for v in vv])
         ax.fill_between(vv, Dr, Dv, color=CH, alpha=0.12, lw=0); ax.plot(vv, Dv, ls="--", color=CD, lw=0.9); ax.plot(vv, Dr, ls=":", color=CD, lw=0.9)
-        ax.text(3.95, Dv[-1], "D ", fontsize=7, ha="right", va="bottom"); ax.text(3.95, Dr[-1], "D_rel ", fontsize=7, ha="right", va="bottom")
+        ax.plot(vv, Dc, ls="-.", color=CD, lw=0.9)
+        ax.text(3.95, Dv[-1], "D ", fontsize=7, ha="right", va="top"); ax.text(3.95, Dr[-1], "D_rel ", fontsize=7, ha="right", va="bottom")
+        ax.text(3.95, Dc[-1], "D_cert ", fontsize=7, ha="right", va="bottom")
         for f in sorted(glob.glob(str(RESULTS / "core" / "e3_collocation_jobs" / f"{cfg}_v*_k41_s6_dt0.01-0.1_reg.json"))):
             j = json.load(open(f)); v0 = float(j["v"]); hc = float(j["h_c"]); hi = float(j.get("h_infeasible_max") or 0.0)
+            Dcert = float(SD.D_of(v0, z, zd, dc))
+            certified.append({"config": cfg, "v": v0, "h_c": hc, "D": float(j["D"]), "D_rel": float(j["D_rel"]), "D_cert": Dcert, "h_c_over_D": hc / float(j["D"]), "h_c_over_D_cert": hc / Dcert})
             ax.errorbar([v0], [hc], yerr=[[max(hc - hi, 0.0)], [0.0]], fmt="o", color=CINK, ms=3, elinewidth=0.6, capsize=1.5)
             x = np.array(j["best_trajectory"]["x"]); xL, vL = x[:, 0:3], x[:, 3:6]
             ax.plot(vL @ p3.n_vec, p3.d0 - xL @ p3.n_vec, color=CINK, lw=0.5, alpha=0.7)
@@ -237,7 +243,8 @@ def fig4_sandwich(out: Path):
         ax.set_yscale("log"); ax.set_xlim(0, 4.2); ax.set_ylim(5e-3, 12); ax.set_xlabel("v [m/s]"); ax.set_ylabel("h [m]")
         ax.set_title({"A": "A: all cables toward the wall", "B": "B: mixed", "C": "C: all cables at z̄"}[cfg], fontsize=7.5)
         files.append(save(fig, out, f"paper_fig4{letter}_sandwich_{cfg}", tight=True))
-    group("fig4_sandwich", files, "The viability kernel boundary lies in the band between h = D_rel(v) (dotted, outer bound) and h = D(v) (dashed, inner bound), drawn for the initial cable state of each configuration (N = 3, set A_N3): the smallest initial distance h_c from which direct collocation found a verified trajectory into X_RF (●, with the bisection interval as error bar) and the trajectories themselves (thin curves from (v₀, h_c) to v = 0) hug the outer bound when all cables are at z̄ (C) and leave a factor 2–4 in A. (a) also shows two closed-loop E2 trajectories of the sampled filter (N = 4) colored by H along the curve: one that parks with H riding zero and one that touched the wall.")
+    (RESULTS / "core" / "e3_collocation_certified.json").write_text(json.dumps({"team": p3c.name, "T_h": p3c.T_h, "nu_dec": p3c.nu_dec, "rows": certified}, indent=1))
+    group("fig4_sandwich", files, "The viability kernel boundary lies in the band between h = D_rel(v) (dotted, outer bound) and h = D(v) (dashed, inner bound with the floor T_min and the time-optimal swing, the bound the collocation was run against), drawn for the initial cable state of each configuration (N = 3, set A_N3); the dash-dotted curve D_cert is the stopping distance of the certified maneuver (hover floor T_h, deceleration nu' = 0.8 nu) for the same states, written to e3_collocation_certified.json with the ratios h_c / D_cert. The smallest initial distance h_c from which direct collocation found a verified trajectory into X_RF (●, with the bisection interval as error bar) and the trajectories themselves (thin curves from (v₀, h_c) to v = 0) hug the outer bound when all cables are at z̄ (C) and leave a factor 2–4 in A. (a) also shows two closed-loop E2 trajectories of the sampled filter (N = 4) colored by H along the curve: one that parks with H riding zero and one that touched the wall.")
 
 # ------------------------------------------------------------------ 5. sampled-data margin as a map + mechanism
 def fig5_margin_map(out: Path):

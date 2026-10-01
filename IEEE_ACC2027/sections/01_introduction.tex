@@ -10,9 +10,9 @@
 
 %
 
-Cooperative aerial transport uses multiple quadrotors to carry a payload through cables.  A cable can pull the payload but cannot push it.  The braking forces available to the team therefore depend on the cable directions.  If every cable pulls toward a wall, the team must reposition before it can slow the payload's approach (Fig.~\ref{fig:scene}).  The payload can continue accelerating toward the wall during this motion.  Safe braking must therefore account for the time needed to change the cable geometry.
+Cooperative aerial transport uses multiple quadrotors to carry a payload through cables.  A cable can pull the payload but cannot push it, so the braking forces available to the team depend on the cable directions.  If every cable pulls toward a wall, the team must reposition before it can slow the payload (Fig.~\ref{fig:scene}), and safe braking must account for the time this takes.
 
-Safety filters restrict a nominal controller's commands to enforce prescribed state constraints.  A wall-distance high-order control barrier function (HOCBF) filter can admit a control command now and lose feasibility later.  Feasibility here means that at least one command satisfies both the filter constraint and the physical input limits.  Preserving this admissibility over time is a recursive-feasibility problem.  We investigate how much wall clearance is needed when braking requires a prior change in configuration.
+Safety filters restrict a nominal controller's commands to enforce state constraints.  A wall-distance high-order control barrier function (HOCBF) filter can admit a command now and lose feasibility later, that is, no command may satisfy both its constraint and the input limits.  We ask how much wall clearance is needed when braking requires a prior change of configuration.
 
 \begin{figure}[t]
 \centering
@@ -87,18 +87,18 @@ Safety filters restrict a nominal controller's commands to enforce prescribed st
 
 \end{tikzpicture}%
 }
-\caption{Two quadrotors carry a payload toward a wall. With both cables leaning toward the wall, positive tensions cannot break it; a cable must first swing to the far side (dashed).}
+\caption{Two quadrotors carry a payload toward a wall. With both cables leaning toward the wall, positive tensions cannot brake it; a cable must first swing to the far side (dashed).}
 \label{fig:scene}
 
 \end{figure}
 
 \subsection{Related Work}
 
-High-order and exponential control barrier functions address safety constraints whose inputs enter through higher derivatives \cite{xiao2019control,xiao2022high,nguyen2016exponential}.  Input-constrained formulations construct safety conditions that account for limits on the available control \cite{breeden2021high}.  Additional feasibility constraints can preserve admissible control choices over time \cite{xiao2022sufficient}.  These results establish that feasibility must be considered alongside satisfaction of the physical safety constraint.
+High-order and exponential control barrier functions address safety constraints whose inputs enter through higher derivatives \cite{xiao2019control,xiao2022high,nguyen2016exponential}.  Input-constrained formulations construct safety conditions that account for limits on the available control \cite{breeden2021high}.  Additional feasibility constraints can preserve admissible control choices over time \cite{xiao2022sufficient}.
 
-Backup CBFs construct controlled-invariant sets using the future motion under a known backup controller \cite{chen2021backup,gurriet2020scalable}.  Constructive and predictive barriers also use future trajectories to formulate safety conditions \cite{squires2018constructive,breeden2022predictive}.  Backup methods have been applied to high-speed drone geofencing \cite{singletary2022onboard}.  Van Wijk et al. derive a closed-form controller that interpolates between nominal and backup commands \cite{vanwijk2025}.  This result concerns the computation of the control command.
+Backup CBFs construct controlled-invariant sets using the future motion under a known backup controller \cite{chen2021backup,gurriet2020scalable}.  Constructive and predictive barriers also use future trajectories to formulate safety conditions \cite{squires2018constructive,breeden2022predictive}.  Backup methods have been applied to high-speed drone geofencing \cite{singletary2022onboard}.
 
-For cable-driven robots, wrench-feasibility analyses characterize the forces available at a given geometry \cite{gouttefarde2011interval,bouchard2010ability,erskine2019wrench}.  Cooperative aerial-transport models describe the dynamics that govern changes in cable geometry \cite{sreenath2013dynamics,lee2018geometric}.  CBF-based trajectory planning has also been developed for obstacle avoidance during cooperative payload manipulation \cite{pallar2025optimal}.  These approaches provide relevant tools for analyzing force availability and planning safe motion.
+For cable-driven robots, wrench-feasibility analyses characterize the forces available at a given geometry \cite{gouttefarde2011interval,bouchard2010ability}.  Cooperative aerial-transport models describe the dynamics that govern changes in cable geometry \cite{sreenath2013dynamics,lee2018geometric}, and CBF-based planning has been developed for obstacle avoidance during cooperative payload manipulation \cite{pallar2025optimal}.
 
 Shi et al. address the time needed for a quadrotor to reorient its thrust before braking \cite{shi2026escape}.  Their escape-aware barrier accounts for reorientation limits imposed by bounded body rates.  The cable-transport setting considered here couples braking forces to cable coordinates with bounded second-order dynamics.  Our focus is an explicit calculation of the future wallward excursion caused by this reconfiguration delay.  The calculation supports complementary sufficient and necessary conditions for avoiding wall contact.
 

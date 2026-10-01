@@ -45,22 +45,139 @@ from authority_barriers.theory.sampling import sample_XRF_layer
 from authority_barriers.theory.state import State
 from authority_barriers.experiments.common import out_dir
 
-ROWS = {"R1": (1e-3, 1.25), "R2": (5e-3, 1.25), "R1n": (1e-3, None), "R2n": (5e-3, None)}     # period [s], factor of the acceleration rows
+ROWS = {"R0": (5e-4, 1.25), "R1": (1e-3, 1.25), "R2": (5e-3, 1.25), "R1n": (1e-3, None), "R2n": (5e-3, None)}     # period [s], factor of the acceleration rows
+SUBSTEPS = {}                 # states evaluated inside each hold per row (none: the minima between updates are measured by --refine)
 SET = "A_alt"
+TOL = {"integrator": (1e-9, 1e-11), "integrator_tight": (1e-12, 1e-14), "solver_tight": 1e-10}
+REFINE = [("hold_1ms", 1e-3, "integrator", None), ("hold_0.5ms", 5e-4, "integrator", None), ("hold_0.25ms", 2.5e-4, "integrator", None),
+          ("hold_1ms_integrator_tight", 1e-3, "integrator_tight", None), ("hold_1ms_solver_tight", 1e-3, "integrator", "solver_tight")]
 
 
 def _trial(job):
     """One closed loop; returns the record as a dict of arrays (run in a worker process)."""
-    row, k, dt, accel, t_final, x0 = job
+    row, k, dt, accel, t_final, x0, substeps, rtol, atol, solver_tol = (job + (0, *TOL["integrator"], None))[:10]
     from authority_barriers.simulator.nominal import AdversarialNominal
     from authority_barriers.theory.closed_loop import run_sampled
     from authority_barriers.theory.filters import ProposedFilter
     p = load_set(SET)
     st = State(*(np.asarray(x0[key], float) for key in ("x_L", "v_L", "q", "qd")))
     t0 = time.perf_counter()
-    cl = run_sampled(st, ProposedFilter(p, altitude=True, dt=dt, accel_bound=accel), AdversarialNominal(p), p, t_final, dt=dt)
+    cl = run_sampled(st, ProposedFilter(p, altitude=True, dt=dt, accel_bound=accel, solver_tol=solver_tol), AdversarialNominal(p), p, t_final,
+                     dt=dt, rtol=rtol, atol=atol, substeps=substeps)
     cl["wall_time"] = time.perf_counter() - t0
     return row, k, cl
+
+
+def _x0(x: np.ndarray, N: int) -> dict:
+    return {"x_L": x[0:3].tolist(), "v_L": x[3:6].tolist(), "q": x[6:6 + 3 * N].reshape(N, 3).tolist(), "qd": x[6 + 3 * N:6 + 6 * N].reshape(N, 3).tolist()}
+
+
+def _between(cl: dict) -> dict:
+    """Minima between updates (NaN when the record has none)."""
+    return {key: (float(np.nanmin(cl[key])) if key in cl and np.isfinite(cl[key]).any() else float("nan"))
+            for key in ("h_between", "H_between", "margin_z_between", "margin_w_between", "H_up_between", "H_down_between")} | \
+        {key: (float(np.max(cl[key])) if key in cl else float("nan")) for key in ("T_viol", "f_viol")}
+
+
+def refine(out: Path, p, t_final: float, workers: int):
+    """The recorded contact trials under finer holds and tighter tolerances: hold 1, 0.5, 0.25 ms (integrator rtol 1e-9,
+    atol 1e-11, Clarabel defaults), and at 1 ms the integrator tightened to 1e-12 / 1e-14 and the solver to 1e-10, each
+    alone; ten states evaluated inside every hold. Writes refine.md, refine.json and fig_e8_refine."""
+    trials = [(row, k) for row in ("R1", "R2") for k in range(len(list(out.glob(f"e8_{row}_*.npz"))))
+              if (out / f"e8_{row}_{k}.npz").exists() and str(np.load(out / f"e8_{row}_{k}.npz", allow_pickle=False)["termination"]) == "wall_contact"]
+    jobs, recs = [], {}
+    for row, k in trials:
+        x0 = _x0(np.load(out / f"e8_{row}_{k}.npz", allow_pickle=False)["x"][0], p.N)
+        for name, dt, integ, solv in REFINE:
+            f = out / f"e8_refine_{row}_{k}_{name}.npz"
+            if f.exists():
+                z = np.load(f, allow_pickle=False); recs[(row, k, name)] = {key: (str(z[key]) if key == "termination" else z[key]) for key in z.files}; continue
+            jobs.append(((row, k, name), None, dt, ROWS["R1"][1], t_final, x0, 10, *TOL[integ], None if solv is None else TOL[solv]))
+    print(f"refine: {len(trials)} contact trials, {len(recs)} records cached, running {len(jobs)}", flush=True)
+
+    def keep(key, cl):
+        np.savez_compressed(out / f"e8_refine_{key[0]}_{key[1]}_{key[2]}.npz", t_final=t_final, **{k2: np.asarray(v) for k2, v in cl.items()}); recs[key] = cl
+
+    if workers <= 1 or len(jobs) <= 1:
+        for j in jobs:
+            key, _, cl = _trial(j); keep(key, cl)
+    else:
+        with get_context("spawn").Pool(min(workers, len(jobs))) as pool:
+            for key, _, cl in pool.imap_unordered(_trial, jobs):
+                keep(key, cl); print(f"  {key}: {cl['termination']} min h {np.min(cl['h']):.3e}", flush=True)
+    table = {}
+    for (row, k, name), cl in recs.items():
+        m = metrics(cl, p) | _between(cl)
+        table.setdefault(f"e8_{row}_{k}", {})[name] = m
+    lines = [f"# E8 refinement of the recorded contact trials (set {p.name})", "",
+             "Each contact trial of R1 and R2 rerun from the same state with the same nominal input: hold 1, 0.5 and 0.25 ms with the integrator at "
+             "rtol 1e-9 / atol 1e-11 and Clarabel at its defaults; at 1 ms also the integrator at 1e-12 / 1e-14 and the solver at 1e-10, each alone. "
+             "Minima between updates are taken over ten states inside every hold.", "",
+             "| trial | run | termination | min h [mm] | min h between [mm] | min H [mm] | min H between [mm] | min swing margin z, w | min H_up, H_down between [m] | "
+             "max tension / thrust violation [N] | infeasible |", "|" + "---|" * 11]
+    for label, runs in table.items():
+        for name, _, _, _ in REFINE:
+            if name not in runs: continue
+            m = runs[name]
+            lines.append(f"| {label} | {name} | {m['termination']} | {1e3 * m['min_h']:.4f} | {1e3 * m['h_between']:.4f} | {1e3 * m['min_H']:.3f} | {1e3 * m['H_between']:.3f} | "
+                         f"{m['margin_z_between']:.4f}, {m['margin_w_between']:.4f} | {m['H_up_between']:.3f}, {m['H_down_between']:.3f} | {m['T_viol']:.1e} / {m['f_viol']:.1e} | {m['infeasible']} |")
+    (out / "refine.md").write_text("\n".join(lines) + "\n")
+    (out / "refine.json").write_text(json.dumps({"runs": [list(r) for r in REFINE], "tolerances": TOL, "trials": table}, indent=1))
+    # figure: smallest wall distance against the hold, one line per state
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullLocator
+    from authority_barriers.experiments.make_figures import C, COL_W, constants, save
+    fig, ax = plt.subplots(figsize=(COL_W, 2.1))
+    holds = [2.5e-4, 5e-4, 1e-3]; names = {2.5e-4: "hold_0.25ms", 5e-4: "hold_0.5ms", 1e-3: "hold_1ms"}
+    seen = set()
+    for label, runs in table.items():
+        state = label.split("_")[-1]
+        if state in seen: continue                      # the same state recorded under two rows
+        seen.add(state)
+        hmin = [min(runs[names[h]]["min_h"], runs[names[h]]["h_between"]) if names[h] in runs else np.nan for h in holds]
+        ax.plot([1e3 * h for h in holds], [1e3 * v for v in hmin], marker="o", ms=3, label=f"state {state}")
+    ax.axhline(0.0, color=C["gray"], lw=0.6)
+    ax.set_xscale("log"); ax.set_xlabel("hold [ms]"); ax.set_ylabel("min wall distance [mm]")
+    ax.set_xticks([0.25, 0.5, 1.0]); ax.set_xticklabels(["0.25", "0.5", "1"]); ax.xaxis.set_minor_locator(NullLocator())
+    ax.legend(frameon=False, ncol=2, fontsize=6); fig.tight_layout()
+    save(fig, out / "figures", "fig_e8_refine", "E8 refinement: smallest wall distance (negative: penetration) of each recorded contact state against the hold of "
+         "the filter, same states and nominal input, minima at the updates and between them. Expected if the theorem holds and the contacts are a "
+         "sampled-data effect: the distance grows as the hold shrinks. Refuting: a penetration that does not shrink with the hold.",
+         constants(p, {"runs": [list(r) for r in REFINE], "tolerances": TOL}))
+    print("\n".join(lines))
+    return table
+
+
+def bench(out: Path, p, data, n: int = 200, seed: int = 11):
+    """Single-process timing on n states of the E8 sample: the stopping distance with its gradients, the filter with the wall
+    barrier alone (nominal data, no altitude rows), and the complete filter of E8 (altitude and swing rows, period 1 ms);
+    median, 95th percentile and maximum in ms. Writes bench.json."""
+    import platform
+    from authority_barriers.simulator.nominal import AdversarialNominal
+    from authority_barriers.theory import stopping as SD
+    from authority_barriers.theory.filters import ProposedFilter
+    rng = np.random.default_rng(seed)
+    x0s = sample_XRF_layer(rng, p, n, data, v_range=(1.0, 4.0))
+    nom = AdversarialNominal(p)
+    filters = {"wall_only": ProposedFilter(p, altitude=False, dt=1e-3), "complete": ProposedFilter(p, altitude=True, dt=1e-3, accel_bound=ROWS["R1"][1])}
+    times = {"D_with_gradients": [], "wall_only": [], "complete": []}
+    for st in x0s:
+        t0 = time.perf_counter(); SD.evaluate(st.v(p), st.z(p), st.zd(p), data); times["D_with_gradients"].append(time.perf_counter() - t0)
+        for name, F in filters.items():
+            r = F.solve(st, nom(0.0, st)); times[name].append(r.solve_time)
+    stats = {name: {"median_ms": 1e3 * float(np.median(t)), "p95_ms": 1e3 * float(np.percentile(t, 95)), "max_ms": 1e3 * float(np.max(t)), "n": len(t)} for name, t in times.items()}
+    cpu = platform.processor()
+    try:
+        cpu = [l.split(":", 1)[1].strip() for l in open("/proc/cpuinfo") if l.startswith("model name")][0]
+    except (OSError, IndexError):
+        pass
+    env = {"cpu": cpu, "python": platform.python_version(),
+           "drake": __import__("importlib.metadata").metadata.version("drake"), "solver": "Clarabel (bundled with Drake), default tolerances", "workers": 1}
+    (out / "bench.json").write_text(json.dumps({"set": p.name, "states": n, "seed": seed, "period": 1e-3, "timing_ms": stats, "environment": env}, indent=1))
+    for name, s in stats.items():
+        print(f"{name:18s} median {s['median_ms']:.2f} ms  p95 {s['p95_ms']:.2f} ms  max {s['max_ms']:.2f} ms  (n = {s['n']})")
+    print(env)
+    return stats
 
 
 def metrics(cl: dict, p) -> dict:
@@ -183,6 +300,8 @@ def main():
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--smoke", action="store_true", help="4 states, 1 s")
     ap.add_argument("--compare", action="store_true", help="the comparison with the HOCBF filter from one state (four closed loops) and nothing else")
+    ap.add_argument("--refine", action="store_true", help="the recorded contact trials under finer holds and tighter tolerances, and nothing else")
+    ap.add_argument("--bench", action="store_true", help="single-process timing of D and of the filters on 200 states, and nothing else")
     args = ap.parse_args()
     if args.smoke:
         args.n, args.t_final = 4, 1.0
@@ -192,6 +311,10 @@ def main():
         for name, r in compare(out, p, data).items():
             print(name, json.dumps(r))
         return
+    if args.refine:
+        refine(out, p, args.t_final, args.workers); return
+    if args.bench:
+        bench(out, p, data); return
     rng = np.random.default_rng(args.seed)
     x0s = sample_XRF_layer(rng, p, args.n, data, v_range=(1.0, 4.0))
     t0 = time.time()
@@ -203,7 +326,7 @@ def main():
                 z = np.load(f, allow_pickle=False)
                 if np.allclose(z["x"][0], np.concatenate([st.x_L, st.v_L, st.q.ravel(), st.qd.ravel()]), atol=1e-12) and abs(float(z["t_final"]) - args.t_final) < 1e-12:
                     recs[(row, k)] = {key: z[key] for key in z.files}; continue
-            jobs.append((row, k, dt, accel, args.t_final, {"x_L": st.x_L.tolist(), "v_L": st.v_L.tolist(), "q": st.q.tolist(), "qd": st.qd.tolist()}))
+            jobs.append((row, k, dt, accel, args.t_final, {"x_L": st.x_L.tolist(), "v_L": st.v_L.tolist(), "q": st.q.tolist(), "qd": st.qd.tolist()}, SUBSTEPS.get(row, 0)))
     print(f"cache: {len(recs)} of {len(ROWS) * len(x0s)} records loaded; running {len(jobs)}", flush=True)
 
     def keep(row, k, cl):
@@ -217,13 +340,13 @@ def main():
         with get_context("spawn").Pool(min(args.workers, len(jobs))) as pool:
             for row, k, cl in pool.imap_unordered(_trial, jobs):
                 keep(row, k, cl); print(f"  {row} {k}: {cl['termination']}", flush=True)
-    per = {row: [metrics(recs[(row, k)], p) | {"label": f"e8_{row}_{k}"} for k in range(len(x0s))] for row in ROWS}
+    per = {row: [metrics(recs[(row, k)], p) | _between(recs[(row, k)]) | {"label": f"e8_{row}_{k}"} for k in range(len(x0s))] for row in ROWS}
     lines = [f"# E8: the filter with altitude barriers on the exact taut-cable model (Thm. 12(i)) — set {p.name}, N = {p.N}", "",
              f"{len(x0s)} initial states (swing states and speeds of E2, seed {args.seed}) in the boundary layer H(x0) in [0, 0.05 D], adversarial nominal, "
              f"horizon {args.t_final:g} s; hover floor T_h = {p.T_h:g} N, swing deceleration {p.nu_dec:g} 1/s^2, altitude band [{p.alt_min:g}, {p.alt_max:g}] m; "
              f"wall {time.time() - t0:.0f} s with {args.workers} workers.", "",
              "| row | period [ms] | acceleration rows | trials | contacts | stopped by a slack cable | min h [m] | min H [m] | min H_up [m] | min H_down [m] | largest climb [m] | largest drop [m] | "
-             "altitude in the band | infeasible samples | trials with an infeasible sample | median solve [ms] |", "|" + "---|" * 16]
+             "altitude in the band | infeasible samples | trials with an infeasible sample | median solve [ms] | min h between updates [m] | min H between updates [m] |", "|" + "---|" * 18]
     summary = {}
     for row, (dt, accel) in ROWS.items():
         M = per[row]
@@ -231,11 +354,15 @@ def main():
              "min_h": min(m["min_h"] for m in M), "min_H": min(m["min_H"] for m in M), "min_H_up": min(m["min_H_up"] for m in M),
              "min_H_down": min(m["min_H_down"] for m in M), "climb": max(m["climb"] for m in M), "drop": max(m["drop"] for m in M),
              "in_band": sum(m["in_band"] for m in M), "infeasible": sum(m["infeasible"] for m in M), "samples": sum(m["samples"] for m in M),
-             "trials_infeasible": sum(m["infeasible"] > 0 for m in M), "solve_ms": float(np.median([m["solve_ms_median"] for m in M]))}
+             "trials_infeasible": sum(m["infeasible"] > 0 for m in M), "solve_ms": float(np.median([m["solve_ms_median"] for m in M])),
+             "min_h_between": float(np.min([m["h_between"] for m in M])) if np.isfinite([m["h_between"] for m in M]).all() else None,
+             "min_H_between": float(np.min([m["H_between"] for m in M])) if np.isfinite([m["H_between"] for m in M]).all() else None}
         summary[row] = s
+        hb = "—" if s["min_h_between"] is None else f"{s['min_h_between']:.5f}"
+        Hb = "—" if s["min_H_between"] is None else f"{s['min_H_between']:.5f}"
         lines.append(f"| {row} | {s['period_ms']:g} | {'yes' if accel else 'no'} | {s['trials']} | {s['contacts']} | {s['slack_stops']} | {s['min_h']:.4f} | {s['min_H']:.4f} | {s['min_H_up']:.3f} | "
                      f"{s['min_H_down']:.3f} | {s['climb']:.2f} | {s['drop']:.3f} | {s['in_band']} of {s['trials']} | {s['infeasible']} of {s['samples']} | "
-                     f"{s['trials_infeasible']} | {s['solve_ms']:.2f} |")
+                     f"{s['trials_infeasible']} | {s['solve_ms']:.2f} | {hb} | {Hb} |")
     r1 = summary["R1"]
     ok = r1["contacts"] == 0 and r1["min_H"] >= -2e-3 and r1["in_band"] == r1["trials"]
     lines[0] += f" — R1 {'PASS' if ok else 'FAIL'}"

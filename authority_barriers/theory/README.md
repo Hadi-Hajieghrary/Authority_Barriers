@@ -128,7 +128,8 @@ values Ḣ_j, and a `rows` dict of extras).
   (`relax_on_infeasible`, decision D-15) and reports `relaxed=True`; if that program fails as well it
   returns the plan's own thrust (status `fallback_plan`). A swing state outside V is projected into V before
   D is evaluated (`clamped=True`). Options: `altitude=True` adds the rows of the altitude barriers and uses the
-  certified barrier data; `accel_bound=c` adds |z̈_i| ≤ c ν and |ẅ_i| ≤ c ν_w, which bound the change of the swing
+  certified barrier data; `solver_tol=t` sets Clarabel's feasibility and gap tolerances to t (its defaults, 1e-8,
+  otherwise); `accel_bound=c` adds |z̈_i| ≤ c ν and |ẅ_i| ≤ c ν_w, which bound the change of the swing
   rates within one sampling period.
 - `HOCBFFilter` — the high-order CBF baseline of Sec. III: row b(T) ≥ β(x) with β from the class-K pair
   (α₁, α₂) and, optionally, a class-K swing-rate row so that Thm. 5's hypothesis ‖q̇_i‖ ≤ ω̄ holds by
@@ -162,9 +163,13 @@ The one-cable (h, v, z, ż) and two-cable (h, v, z1, ż1, z2, ż2) systems with 
 support points, feasibility tests and per-node speed bounds (for the CFL condition).
 
 ### `closed_loop.py` — the sampled loop on the exact model
-`run_sampled(filter, nominal, x0, ...)`: the zero-order-hold filter on the taut ODE itself (no plant).
-Used by the attribution procedure, by `common.calibrate_margin` to measure Rem. 19's sampled-data
-deficit on the model alone, and by the experiment E8 (`experiments/e8_exact_model.py`).
+`run_sampled(filter, nominal, x0, ...)`: the zero-order-hold filter on the taut ODE itself (no plant); each hold
+is integrated with DOP853 (`rtol`, `atol`, default 1e-9 and 1e-11). The record holds, per tick, the largest violation
+of the tension floor and of the thrust limit by the applied command (`T_viol`, `f_viol`) and, with `substeps=k > 0`,
+the minima over k states inside the hold of h, H, the swing margins of z and w, and the altitude barriers
+(`h_between`, `H_between`, `margin_z_between`, `margin_w_between`, `H_up_between`, `H_down_between`; NaN otherwise),
+computed by `between_samples`. Used by the attribution procedure, by `common.calibrate_margin` to measure Rem. 19's
+sampled-data deficit on the model alone, and by the experiment E8 (`experiments/e8_exact_model.py`).
 
 ## Data flow of one filter tick
 
