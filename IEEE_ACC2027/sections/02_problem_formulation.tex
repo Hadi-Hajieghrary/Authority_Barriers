@@ -5,25 +5,23 @@ Quadrotor $i\in\{1,\dots,N\}$ has position $p_i\in\R^3$, mass $m_i$, and thrust 
 The payload is a point mass $m_L$ at $x_L\in\R^3$, attached to quadrotor $i$ by a massless, inextensible cable of length $l_i$ with unit direction $q_i\in\Sph$ from the payload to the quadrotor, $p_i=x_L+l_iq_i$. The cable exerts the force $T_iq_i$ on the payload and $-T_iq_i$ on the quadrotor, with $T_i\ge0$ because a cable cannot push. With the gravitational acceleration $g$,
 \begin{align}
 m_L\ddot x_L &= \textstyle\sum_{i} T_i q_i - m_L g e_3, \label{eq:load}\\
-m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i. \label{eq:veh}
+m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i.\nonumber
 \end{align}
 The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$, where $q_i\tr q_i=1$ and $q_i\tr\dot q_i=0$. We assume every cable is taut, with tension at least $T_{\min}>0$; the filter in Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
 
 We decompose each thrust vector along the cable and perpendicular to it, $u_i=s_iq_i+u_i^{\perp}$ with $s_i:=q_i\tr u_i$, $u_i^\perp:=P_iu_i$, $P_i:=I-q_iq_i\tr$, and we use the \emph{specific force} of the payload, $a:=\ddot x_L+ge_3$.
 
 \begin{lemma}[Structure]\label{lem:structure}
-Along any solution of \eqref{eq:load}--\eqref{eq:veh} with taut cables:
+Along any solution of \eqref{eq:load} with taut cables:
 (a) $T_i = s_i - m_i\,q_i\tr a + m_i l_i\|\dot q_i\|^2$ with $s=(s_1,\dots,s_N)$;
 (b) $\ddot q_i = \tfrac{1}{m_il_i}u_i^\perp - \tfrac{1}{l_i}P_i a - \|\dot q_i\|^2 q_i$;
 (c) $M_a(q)\,a=\sum_i s_iq_i+\sum_i m_il_i\|\dot q_i\|^2q_i$ with $M_a(q):=m_LI+\sum_i m_iq_iq_i\tr\succ0$.
 \end{lemma}
 \begin{proof}
-Differentiate $p_i=x_L+l_iq_i$ twice and substitute \eqref{eq:load}--\eqref{eq:veh}. Since $q_i\tr\dot q_i=0$ and $q_i\tr\ddot q_i=-\|\dot q_i\|^2$, the projection of \eqref{eq:veh} along $q_i$ gives (a) and the projection perpendicular to $q_i$ gives (b); substituting (a) into \eqref{eq:load} gives (c).
+Differentiate $p_i=x_L+l_iq_i$ twice and substitute \eqref{eq:load}. Since $q_i\tr\dot q_i=0$ and $q_i\tr\ddot q_i=-\|\dot q_i\|^2$, the projection along $q_i$ gives (a) and the projection perpendicular to $q_i$ gives (b); substituting (a) into \eqref{eq:load} gives (c).
 \end{proof}
 
 In words, the parallel component sets the tension, the perpendicular component swings the cable, the two share the limit $\|s_iq_i+u_i^\perp\|\le f_{\max,i}$, and the quadrotors interact only through the specific force, which by (c) the inputs determine uniquely. For fixed $(q,\dot q)$, (a) and (c) define an affine bijection between $s$ and $T=(T_1,\dots,T_N)$, so we use the tensions as decision variables: given $T$, $a=\frac{1}{m_L}\sum_jT_jq_j$, and (a) returns $s_i(T)$.
-
-\subsection{Constraints, viability, and the problem}
 
 We consider a wall with horizontal unit normal $n$ pointing into it, with the constraint
 \begin{equation}

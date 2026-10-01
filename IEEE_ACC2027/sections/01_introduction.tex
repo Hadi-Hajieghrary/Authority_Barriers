@@ -10,9 +10,9 @@
 
 %
 
-Cooperative aerial transport uses multiple quadrotors to carry a payload through cables.  A cable can pull the payload but cannot push it, so the braking forces available to the team depend on the cable directions.  If every cable pulls toward a wall, the team must reposition before it can slow the payload (Fig.~\ref{fig:scene}), and safe braking must account for the time this takes.
+Cooperative aerial transport uses multiple quadrotors to carry a payload through cables.  A cable can pull the payload but cannot push it, so the team's available braking forces depend on cable directions.  If every cable pulls toward a wall, the team must reposition before it can slow the payload (Fig.~\ref{fig:scene}), and safe braking must account for its duration.
 
-Safety filters restrict a nominal controller's commands to enforce state constraints.  A wall-distance high-order control barrier function (HOCBF) filter can admit a command now and lose feasibility later, that is, no command may satisfy both its constraint and the input limits.  We ask how much wall clearance is needed when braking requires a prior change of configuration.
+Safety filters restrict a nominal controller's commands to enforce state constraints.  A wall-distance high-order control barrier function (HOCBF) filter can admit a command now and lose feasibility later; that is, no command may satisfy both its constraint and the input limits.  We ask how much wall clearance is needed when braking requires a prior configuration change.
 
 \begin{figure}[t]
 \centering
@@ -87,7 +87,8 @@ Safety filters restrict a nominal controller's commands to enforce state constra
 
 \end{tikzpicture}%
 }
-\caption{Two quadrotors carry a payload toward a wall. With both cables leaning toward the wall, positive tensions cannot brake it; a cable must first swing to the far side (dashed).}
+\caption{Two quadrotors carry a payload toward a wall. With both cables leaning toward the wall, positive tensions cannot break it; a cable must first swing to the far side (dashed).}
+\vspace{-5pt}
 \label{fig:scene}
 
 \end{figure}
@@ -108,6 +109,6 @@ The paper makes four contributions.  First, we establish a sufficient condition 
 
 Second, we derive an explicit stopping-distance certificate from a thrust-reserved swing-and-brake maneuver.  It defines a controlled-invariant set with guaranteed filter feasibility under the stated continuous-time taut-cable assumptions (Theorem~\ref{thm:sandwich}(i), Proposition~\ref{prop:instance}).
 
-Third, we derive an optimistic stopping distance that bounds the viability kernel from outside.  It identifies states from which no admissible controller can avoid wall contact (Theorem~\ref{thm:sandwich}(ii)).
+Third, we derive an optimistic stopping distance that bounds the viability kernel from outside.  It identifies states from which no admissible controller can avoid wall contact.
 
 Fourth, simulations evaluate the filter against HOCBF and numerical backup-CBF baselines.  They illustrate conservatism and expose safety violations under sampled control and slack-cable dynamics.
