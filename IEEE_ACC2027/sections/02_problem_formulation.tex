@@ -7,7 +7,7 @@ The payload is a point mass $m_L$ at $x_L\in\R^3$, attached to quadrotor $i$ by 
 m_L\ddot x_L &= \textstyle\sum_{i} T_i q_i - m_L g e_3, \label{eq:load}\\
 m_i\ddot p_i &= u_i - m_i g e_3 - T_i q_i. \label{eq:veh}
 \end{align}
-The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$. We assume that every cable is taut, with a tension of at least $T_{\min}>0$; the filter of Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
+The state is $x:=(x_L,\dot x_L,q,\dot q)$ with $q:=(q_1,\dots,q_N)$ and $(q_i,\dot q_i)\in T\Sph:=\{(q,\omega)\in\Sph\times\R^3:\ q\tr\omega=0\}$ for every $i$. Thus $q_i\tr q_i=1$ and $q_i\tr\dot q_i=0$ are part of the state manifold. We assume every cable is taut, with tension at least $T_{\min}>0$; the filter in Sec.~\ref{sec:filter} enforces this bound, and the simulations model slack cables.
 
 We decompose each thrust vector along the cable and perpendicular to it, $u_i=s_iq_i+u_i^{\perp}$ with $s_i:=q_i\tr u_i$, $u_i^\perp:=P_iu_i$, $P_i:=I-q_iq_i\tr$, and we use the \emph{specific force} of the payload, $a:=\ddot x_L+ge_3$.
 
@@ -34,10 +34,10 @@ where $h$ is the distance from the payload to the wall. We write $v:=n\tr\dot x_
 
 We impose the operational constraints
 \begin{equation}
-\Xop:=\{x:\ |z_i|\le\bar z,\ (w_i,\dot w_i)\in\mathcal V(\nu_w,\bar w),\ \|\dot q_i\|\le\bar\omega\ \forall i\},
+\Xop:=\{x:\ e_3\tr q_i\ge\cos\theta_q,\ |z_i|\le\bar z,\ (w_i,\dot w_i)\in\mathcal V(\nu_w,\bar w),\ \|\dot q_i\|\le\bar\omega\ \forall i\},
 \label{eq:Xop}
 \end{equation}
-with $\bar z^2+\bar w^2\le\sin^2\theta_q$, $\theta_q<\pi/2$, which keep every cable within $\theta_q$ of the vertical, reserve stopping room for the transverse swing, and bound its swing rate; $\mathcal V$ is defined in \eqref{eq:box} below. With the altitude $\chi:=e_3\tr x_L$ of the payload and a band $[\chi_{\min},\chi_{\max}]$, the constraint set is $\mathcal{C}:=\{x\in\Xop:\ h\ge 0,\ \chi_{\min}\le\chi\le\chi_{\max}\}$. The inputs must respect the thrust limits, the tension bound, and a bound $a_{\max}$ on the payload's specific force:
+with $\bar z^2+\bar w^2\le\sin^2\theta_q$, $\theta_q<\pi/2$. The upper-cone condition $e_3\tr q_i\ge\cos\theta_q$, together with the bounds on $(z_i,w_i)$, keeps every cable within $\theta_q$ of the upward vertical; the remaining conditions reserve stopping room for the transverse swing and bound the swing rate. The set $\mathcal V$ is defined in \eqref{eq:box} below. With the altitude $\chi:=e_3\tr x_L$ of the payload and a band $[\chi_{\min},\chi_{\max}]$, the constraint set is $\mathcal{C}:=\{x\in\Xop:\ h\ge 0,\ \chi_{\min}\le\chi\le\chi_{\max}\}$. The inputs must respect the thrust limits, the tension bound, and a bound $a_{\max}$ on the payload's specific force:
 \begin{equation}
 \begin{split}
 \mathcal{U}(x):=\{u:\ &u_i\in\mathcal{F}_i,\ T_i(x,u)\ge T_{\min}\ \forall i,\\ &\textstyle\|\sum_iT_i(x,u)q_i\|\le m_La_{\max}\}.
